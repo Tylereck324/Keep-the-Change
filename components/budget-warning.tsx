@@ -1,6 +1,5 @@
 'use client'
 
-import { Category } from '@/lib/types'
 import { CategorySuggestion as CategorySuggestionType } from '@/lib/utils/budget-warnings'
 import { CategorySuggestion } from './category-suggestion'
 import { Button } from './ui/button'
@@ -22,12 +21,12 @@ export function BudgetWarning({
   onSwitchCategory,
 }: BudgetWarningProps) {
   return (
-    <Alert className="border-amber-500 bg-amber-50 dark:bg-amber-950/20">
+    <Alert role="alert" className="border-amber-500 bg-amber-50 dark:bg-amber-950/20">
       <AlertDescription>
         <div className="space-y-3">
           {/* Warning Message */}
           <div className="flex items-start gap-2">
-            <span className="text-lg">⚠️</span>
+            <span className="text-lg" aria-hidden="true">⚠️</span>
             <div>
               <p className="font-medium text-amber-900 dark:text-amber-200">
                 This will exceed your {categoryName} budget by ${overage.toFixed(2)}
