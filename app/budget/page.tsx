@@ -1,16 +1,35 @@
 import { getSession } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { getCategories } from '@/lib/actions/categories'
-import { CategoryCard } from '@/components/category-card'
+import { getMonthlyBudgets, copyBudgetFromPreviousMonth } from '@/lib/actions/budgets'
 import { CategoryForm } from '@/components/category-form'
+import { BudgetAmountInput } from '@/components/budget-amount-input'
 import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import Link from 'next/link'
+
+function getCurrentMonth() {
+  const now = new Date()
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+}
 
 export default async function BudgetPage() {
   const session = await getSession()
   if (!session) redirect('/')
 
-  const categories = await getCategories()
+  const currentMonth = getCurrentMonth()
+  const [categories, budgets] = await Promise.all([
+    getCategories(),
+    getMonthlyBudgets(currentMonth),
+  ])
+
+  const budgetMap = new Map(budgets.map((b) => [b.category_id, b]))
+  const totalBudgeted = budgets.reduce((sum, b) => sum + b.budgeted_amount, 0)
+
+  async function handleCopyFromPrevious() {
+    'use server'
+    await copyBudgetFromPreviousMonth(currentMonth)
+  }
 
   return (
     <main className="container mx-auto p-4 max-w-2xl">
@@ -20,25 +39,56 @@ export default async function BudgetPage() {
             ← Dashboard
           </Link>
           <h1 className="text-2xl font-bold">Budget Setup</h1>
+          <p className="text-muted-foreground">
+            {new Date(currentMonth + '-01').toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+          </p>
         </div>
-        <CategoryForm
-          trigger={<Button>+ New Category</Button>}
-        />
+        <div className="flex gap-2">
+          <form action={handleCopyFromPrevious}>
+            <Button variant="outline" type="submit">
+              Copy Last Month
+            </Button>
+          </form>
+          <CategoryForm trigger={<Button>+ Category</Button>} />
+        </div>
       </div>
+
+      <Card className="mb-6">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-lg">Total Budgeted</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-3xl font-bold">${totalBudgeted.toFixed(2)}</p>
+        </CardContent>
+      </Card>
 
       {categories.length === 0 ? (
         <p className="text-center text-muted-foreground py-8">
           No categories yet. Create your first one!
         </p>
       ) : (
-        <div className="space-y-4">
-          {categories.map((category) => (
-            <CategoryCard
-              key={category.id}
-              category={category}
-              spent={0}
-            />
-          ))}
+        <div className="space-y-2">
+          {categories.map((category) => {
+            const budget = budgetMap.get(category.id)
+            return (
+              <Card key={category.id}>
+                <CardContent className="flex items-center justify-between py-3">
+                  <div className="flex items-center gap-2">
+                    <div
+                      className="w-3 h-3 rounded-full"
+                      style={{ backgroundColor: category.color }}
+                    />
+                    <span className="font-medium">{category.name}</span>
+                  </div>
+                  <BudgetAmountInput
+                    categoryId={category.id}
+                    month={currentMonth}
+                    initialAmount={budget?.budgeted_amount ?? 0}
+                  />
+                </CardContent>
+              </Card>
+            )
+          })}
         </div>
       )}
     </main>
