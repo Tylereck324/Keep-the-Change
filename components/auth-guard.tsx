@@ -1,42 +1,43 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useAuth } from '@/lib/hooks/use-auth';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { PinModal } from './pin-modal';
 
 interface AuthGuardProps {
+  householdExists: boolean;
+  isAuthenticated: boolean;
   children: React.ReactNode;
 }
 
-export function AuthGuard({ children }: AuthGuardProps) {
-  const { isAuthenticated, isLoading } = useAuth();
+export function AuthGuard({ householdExists, isAuthenticated, children }: AuthGuardProps) {
   const [showPinModal, setShowPinModal] = useState(false);
+  const router = useRouter();
+
+  // Determine mode based on household existence
+  const mode = householdExists ? 'verify' : 'setup';
 
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
+    // Show modal if not authenticated
+    if (!isAuthenticated) {
       setShowPinModal(true);
-    } else {
-      setShowPinModal(false);
     }
-  }, [isAuthenticated, isLoading]);
+  }, [isAuthenticated]);
 
   const handlePinSuccess = () => {
     setShowPinModal(false);
+    // Refresh the page to update server-side session state
+    router.refresh();
   };
-
-  // Show loading state while checking auth
-  if (isLoading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="text-muted-foreground">Loading...</div>
-      </div>
-    );
-  }
 
   return (
     <>
       {children}
-      <PinModal open={showPinModal} onSuccess={handlePinSuccess} />
+      <PinModal
+        open={showPinModal}
+        mode={mode}
+        onSuccess={handlePinSuccess}
+      />
     </>
   );
 }

@@ -14,11 +14,12 @@ import {
 import { Alert, AlertDescription } from '@/components/ui/alert'
 
 interface PinModalProps {
+  open: boolean
   mode: 'setup' | 'verify'
   onSuccess: () => void
 }
 
-export function PinModal({ mode, onSuccess }: PinModalProps) {
+export function PinModal({ open, mode, onSuccess }: PinModalProps) {
   const [pin, setPin] = useState('')
   const [confirmPin, setConfirmPin] = useState('')
   const [error, setError] = useState('')
@@ -66,7 +67,7 @@ export function PinModal({ mode, onSuccess }: PinModalProps) {
   }
 
   return (
-    <Dialog open={true}>
+    <Dialog open={open}>
       <DialogContent className="sm:max-w-md" onPointerDownOutside={(e) => e.preventDefault()}>
         <DialogHeader>
           <DialogTitle>
