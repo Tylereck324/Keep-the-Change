@@ -25,12 +25,12 @@ export function AppHeader() {
   }
 
   return (
-    <div className="fixed top-4 right-4 z-50">
+    <div className="fixed bottom-4 right-4 z-50 md:top-4 md:bottom-auto">
       <Button
         variant="outline"
         size="icon"
         onClick={toggleTheme}
-        className="relative shadow-md"
+        className="relative shadow-lg"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
