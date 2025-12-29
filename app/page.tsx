@@ -14,7 +14,7 @@ export default async function Home() {
       householdExists={householdExists}
       isAuthenticated={isAuthenticated}
     >
-      <Dashboard />
+      {isAuthenticated ? <Dashboard /> : <div />}
     </AuthGuard>
   );
 }
