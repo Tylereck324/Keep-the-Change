@@ -66,15 +66,15 @@ export function calculateBudgetStatus(
  */
 export function getSortedCategorySuggestions(
   categories: Category[],
-  budgetMap: Map<string, number>,
-  spentMap: Map<string, number>,
+  budgetMap: Record<string, number>,
+  spentMap: Record<string, number>,
   excludeCategoryId?: string
 ): CategorySuggestion[] {
   return categories
     .filter((cat) => cat.id !== excludeCategoryId)
     .map((cat) => {
-      const budgeted = budgetMap.get(cat.id) ?? 0
-      const spent = spentMap.get(cat.id) ?? 0
+      const budgeted = budgetMap[cat.id] ?? 0
+      const spent = spentMap[cat.id] ?? 0
       const status = calculateBudgetStatus(cat, budgeted, spent)
 
       return {

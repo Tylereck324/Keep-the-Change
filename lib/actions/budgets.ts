@@ -161,12 +161,12 @@ export async function autoRolloverIfNeeded(month: string): Promise<void> {
 }
 
 export async function getBudgetDataForWarnings(): Promise<{
-  budgetMap: Map<string, number>
-  spentMap: Map<string, number>
+  budgetMap: Record<string, number>
+  spentMap: Record<string, number>
 }> {
   const householdId = await getSession()
   if (!householdId) {
-    return { budgetMap: new Map(), spentMap: new Map() }
+    return { budgetMap: {}, spentMap: {} }
   }
 
   // Note: Uses UTC timezone for current month calculation. This may be inaccurate
@@ -176,20 +176,24 @@ export async function getBudgetDataForWarnings(): Promise<{
 
   // Get budgets for current month
   const budgets = await getMonthlyBudgets(currentMonth)
-  const budgetMap = new Map(budgets.map((b) => [b.category_id, b.budgeted_amount]))
+  const budgetMapTemp = new Map(budgets.map((b) => [b.category_id, b.budgeted_amount]))
 
   // Get transactions for current month
   const { getTransactionsByMonth } = await import('./transactions')
   const transactions = await getTransactionsByMonth(currentMonth)
 
   // Calculate spent per category (only for transactions with valid category_id)
-  const spentMap = new Map<string, number>()
+  const spentMapTemp = new Map<string, number>()
   transactions
     .filter((t) => t.category_id != null) // Skip transactions without category_id
     .forEach((t) => {
-      const current = spentMap.get(t.category_id) ?? 0
-      spentMap.set(t.category_id, current + t.amount)
+      const current = spentMapTemp.get(t.category_id) ?? 0
+      spentMapTemp.set(t.category_id, current + t.amount)
     })
 
-  return { budgetMap, spentMap }
+  // Convert Maps to plain objects for client component serialization
+  return {
+    budgetMap: Object.fromEntries(budgetMapTemp),
+    spentMap: Object.fromEntries(spentMapTemp),
+  }
 }

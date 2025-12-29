@@ -27,8 +27,8 @@ import {
 
 interface QuickAddButtonProps {
   categories: Category[]
-  budgetMap: Map<string, number>
-  spentMap: Map<string, number>
+  budgetMap: Record<string, number>
+  spentMap: Record<string, number>
 }
 
 export function QuickAddButton({ categories, budgetMap, spentMap }: QuickAddButtonProps) {
@@ -43,6 +43,12 @@ export function QuickAddButton({ categories, budgetMap, spentMap }: QuickAddButt
     categoryName: string
     overage: number
   } | null>(null)
+  const [warningDismissed, setWarningDismissed] = useState(false)
+
+  // Reset warning dismissed flag when category changes
+  useEffect(() => {
+    setWarningDismissed(false)
+  }, [categoryId])
 
   // Check for budget warnings when amount or category changes
   useEffect(() => {
@@ -59,11 +65,18 @@ export function QuickAddButton({ categories, budgetMap, spentMap }: QuickAddButt
       return
     }
 
-    const budgeted = budgetMap.get(categoryId) ?? 0
-    const spent = spentMap.get(categoryId) ?? 0
+    const budgeted = budgetMap[categoryId] ?? 0
+    const spent = spentMap[categoryId] ?? 0
 
     // Only show warning if budget is set
     if (budgeted === 0) {
+      setShowWarning(false)
+      setWarningData(null)
+      return
+    }
+
+    // Don't show warning if user has dismissed it
+    if (warningDismissed) {
       setShowWarning(false)
       setWarningData(null)
       return
@@ -82,7 +95,7 @@ export function QuickAddButton({ categories, budgetMap, spentMap }: QuickAddButt
       setShowWarning(false)
       setWarningData(null)
     }
-  }, [amount, categoryId, budgetMap, spentMap, categories])
+  }, [amount, categoryId, budgetMap, spentMap, categories, warningDismissed])
 
   const resetForm = () => {
     setAmount('')
@@ -91,6 +104,7 @@ export function QuickAddButton({ categories, budgetMap, spentMap }: QuickAddButt
     setError('')
     setShowWarning(false)
     setWarningData(null)
+    setWarningDismissed(false)
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -133,6 +147,7 @@ export function QuickAddButton({ categories, budgetMap, spentMap }: QuickAddButt
 
   const handleKeepCategory = () => {
     setShowWarning(false)
+    setWarningDismissed(true)
   }
 
   const suggestions = showWarning
