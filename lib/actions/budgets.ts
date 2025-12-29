@@ -169,6 +169,9 @@ export async function getBudgetDataForWarnings(): Promise<{
     return { budgetMap: new Map(), spentMap: new Map() }
   }
 
+  // Note: Uses UTC timezone for current month calculation. This may be inaccurate
+  // for users near day boundaries in timezones significantly offset from UTC.
+  // Consider using a user-specific timezone setting for production use.
   const currentMonth = new Date().toISOString().slice(0, 7) // YYYY-MM
 
   // Get budgets for current month
@@ -179,12 +182,14 @@ export async function getBudgetDataForWarnings(): Promise<{
   const { getTransactionsByMonth } = await import('./transactions')
   const transactions = await getTransactionsByMonth(currentMonth)
 
-  // Calculate spent per category
+  // Calculate spent per category (only for transactions with valid category_id)
   const spentMap = new Map<string, number>()
-  transactions.forEach((t) => {
-    const current = spentMap.get(t.category_id) ?? 0
-    spentMap.set(t.category_id, current + t.amount)
-  })
+  transactions
+    .filter((t) => t.category_id != null) // Skip transactions without category_id
+    .forEach((t) => {
+      const current = spentMap.get(t.category_id) ?? 0
+      spentMap.set(t.category_id, current + t.amount)
+    })
 
   return { budgetMap, spentMap }
 }
