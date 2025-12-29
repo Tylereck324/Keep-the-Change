@@ -19,24 +19,78 @@ import {
 } from '@/components/ui/select'
 import { createTransaction } from '@/lib/actions/transactions'
 import { Category } from '@/lib/types'
+import { BudgetWarning } from '@/components/budget-warning'
+import {
+  wouldExceedBudget,
+  getSortedCategorySuggestions,
+} from '@/lib/utils/budget-warnings'
 
 interface QuickAddButtonProps {
   categories: Category[]
+  budgetMap: Map<string, number>
+  spentMap: Map<string, number>
 }
 
-export function QuickAddButton({ categories }: QuickAddButtonProps) {
+export function QuickAddButton({ categories, budgetMap, spentMap }: QuickAddButtonProps) {
   const [open, setOpen] = useState(false)
   const [amount, setAmount] = useState('')
   const [categoryId, setCategoryId] = useState('')
   const [description, setDescription] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [showWarning, setShowWarning] = useState(false)
+  const [warningData, setWarningData] = useState<{
+    categoryName: string
+    overage: number
+  } | null>(null)
+
+  // Check for budget warnings when amount or category changes
+  useEffect(() => {
+    if (!amount || !categoryId) {
+      setShowWarning(false)
+      setWarningData(null)
+      return
+    }
+
+    const numAmount = parseFloat(amount)
+    if (isNaN(numAmount) || numAmount <= 0) {
+      setShowWarning(false)
+      setWarningData(null)
+      return
+    }
+
+    const budgeted = budgetMap.get(categoryId) ?? 0
+    const spent = spentMap.get(categoryId) ?? 0
+
+    // Only show warning if budget is set
+    if (budgeted === 0) {
+      setShowWarning(false)
+      setWarningData(null)
+      return
+    }
+
+    const { wouldExceed, overage } = wouldExceedBudget(numAmount, budgeted, spent)
+
+    if (wouldExceed) {
+      const category = categories.find((c) => c.id === categoryId)
+      setShowWarning(true)
+      setWarningData({
+        categoryName: category?.name ?? 'Unknown',
+        overage,
+      })
+    } else {
+      setShowWarning(false)
+      setWarningData(null)
+    }
+  }, [amount, categoryId, budgetMap, spentMap, categories])
 
   const resetForm = () => {
     setAmount('')
     setCategoryId('')
     setDescription('')
     setError('')
+    setShowWarning(false)
+    setWarningData(null)
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -71,6 +125,19 @@ export function QuickAddButton({ categories }: QuickAddButtonProps) {
       setLoading(false)
     }
   }
+
+  const handleSwitchCategory = (newCategoryId: string) => {
+    setCategoryId(newCategoryId)
+    // Warning will automatically update via useEffect
+  }
+
+  const handleKeepCategory = () => {
+    setShowWarning(false)
+  }
+
+  const suggestions = showWarning
+    ? getSortedCategorySuggestions(categories, budgetMap, spentMap, categoryId)
+    : []
 
   return (
     <>
@@ -144,6 +211,17 @@ export function QuickAddButton({ categories }: QuickAddButtonProps) {
                 </SelectContent>
               </Select>
             </div>
+
+            {/* Budget Warning */}
+            {showWarning && warningData && (
+              <BudgetWarning
+                categoryName={warningData.categoryName}
+                overage={warningData.overage}
+                suggestions={suggestions}
+                onKeep={handleKeepCategory}
+                onSwitchCategory={handleSwitchCategory}
+              />
+            )}
 
             <div className="space-y-2">
               <Label htmlFor="quick-description">Description (optional)</Label>
