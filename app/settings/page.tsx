@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import { getCategories } from '@/lib/actions/categories'
 import { CategoryForm } from '@/components/category-form'
 import { ChangePinForm } from '@/components/change-pin-form'
+import { ThemeToggle } from '@/components/theme-toggle'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
@@ -21,6 +22,16 @@ export default async function SettingsPage() {
         </Link>
         <h1 className="text-2xl font-bold">Settings</h1>
       </div>
+
+      {/* Theme */}
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle>Appearance</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ThemeToggle />
+        </CardContent>
+      </Card>
 
       {/* Change PIN */}
       <Card className="mb-6">
