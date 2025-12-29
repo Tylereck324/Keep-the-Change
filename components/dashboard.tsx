@@ -149,11 +149,14 @@ export async function Dashboard() {
       </div>
 
       {/* Quick Links */}
-      <div className="flex gap-2">
-        <Link href="/transactions" className="flex-1">
-          <Button variant="outline" className="w-full">View All Transactions</Button>
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+        <Link href="/reports">
+          <Button variant="outline" className="w-full">📊 Reports</Button>
         </Link>
-        <Link href="/settings" className="flex-1">
+        <Link href="/transactions">
+          <Button variant="outline" className="w-full">Transactions</Button>
+        </Link>
+        <Link href="/settings" className="col-span-2 md:col-span-1">
           <Button variant="outline" className="w-full">Settings</Button>
         </Link>
       </div>
