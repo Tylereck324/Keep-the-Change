@@ -23,26 +23,38 @@ export function calculateBudgetStatus(
   budgeted: number,
   spent: number
 ): BudgetStatus {
-  const remaining = budgeted - spent
-  const percentUsed = budgeted > 0 ? (spent / budgeted) * 100 : 0
+  // Handle negative amounts - treat as zero
+  const normalizedBudgeted = Math.max(0, budgeted)
+  const normalizedSpent = Math.max(0, spent)
+
+  const remaining = normalizedBudgeted - normalizedSpent
+  const percentUsed = normalizedBudgeted > 0 ? (normalizedSpent / normalizedBudgeted) * 100 : 0
 
   let indicator: 'green' | 'yellow' | 'red'
-  const percentRemaining = 100 - percentUsed
 
-  if (percentRemaining > 50) {
-    indicator = 'green'
-  } else if (percentRemaining >= 20) {
-    indicator = 'yellow'
-  } else {
+  // Explicit over-budget handling
+  if (normalizedSpent > normalizedBudgeted) {
+    // Over budget - always red
     indicator = 'red'
+  } else {
+    // Within budget - check percentage remaining
+    const percentRemaining = 100 - percentUsed
+
+    if (percentRemaining > 50) {
+      indicator = 'green'
+    } else if (percentRemaining >= 20) {
+      indicator = 'yellow'
+    } else {
+      indicator = 'red'
+    }
   }
 
   return {
     categoryId: category.id,
     categoryName: category.name,
     categoryColor: category.color,
-    budgeted,
-    spent,
+    budgeted: normalizedBudgeted,
+    spent: normalizedSpent,
     remaining,
     percentUsed,
     indicator,
