@@ -3,10 +3,33 @@
 import { revalidatePath } from 'next/cache'
 import { supabase } from '@/lib/supabase'
 import { getSession } from '@/lib/auth'
+import type { Category, Database } from '@/lib/types'
 
-export async function getCategories() {
+/**
+ * Validates that a category name is valid
+ */
+function validateName(name: string): void {
+  if (!name || name.trim().length === 0) {
+    throw new Error('Category name cannot be empty')
+  }
+  if (name.length > 100) {
+    throw new Error('Category name must be 100 characters or less')
+  }
+}
+
+/**
+ * Validates that a color is a valid hex color format
+ */
+function validateColor(color: string): void {
+  const hexColorRegex = /^#[0-9A-Fa-f]{6}$/
+  if (!hexColorRegex.test(color)) {
+    throw new Error('Color must be a valid hex color format (e.g., #FF5733)')
+  }
+}
+
+export async function getCategories(): Promise<Category[]> {
   const householdId = await getSession()
-  if (!householdId) return []
+  if (!householdId) throw new Error('Not authenticated')
 
   const { data, error } = await supabase
     .from('categories')
@@ -14,49 +37,59 @@ export async function getCategories() {
     .eq('household_id', householdId)
     .order('name')
 
-  if (error) throw error
+  if (error) throw new Error(`Failed to fetch categories: ${error.message}`)
   return data || []
 }
 
-export async function createCategory(name: string, color: string) {
+export async function createCategory(name: string, color: string): Promise<Category> {
   const householdId = await getSession()
   if (!householdId) throw new Error('Not authenticated')
 
+  // Validate inputs
+  validateName(name)
+  validateColor(color)
+
   const { data, error } = await supabase
     .from('categories')
+    // @ts-expect-error - Supabase client type inference issue
     .insert({
       household_id: householdId,
-      name,
+      name: name.trim(),
       color,
     })
     .select()
     .single()
 
-  if (error) throw error
+  if (error) throw new Error(`Failed to create category: ${error.message}`)
 
   revalidatePath('/')
-  return data
+  return data as Category
 }
 
-export async function updateCategory(id: string, name: string, color: string) {
+export async function updateCategory(id: string, name: string, color: string): Promise<void> {
   const householdId = await getSession()
   if (!householdId) throw new Error('Not authenticated')
 
-  const { data, error } = await supabase
+  // Validate inputs
+  validateName(name)
+  validateColor(color)
+
+  const { error } = await supabase
     .from('categories')
-    .update({ name, color })
+    // @ts-expect-error - Supabase client type inference issue
+    .update({
+      name: name.trim(),
+      color
+    })
     .eq('id', id)
     .eq('household_id', householdId)
-    .select()
-    .single()
 
-  if (error) throw error
+  if (error) throw new Error(`Failed to update category: ${error.message}`)
 
   revalidatePath('/')
-  return data
 }
 
-export async function deleteCategory(id: string) {
+export async function deleteCategory(id: string): Promise<void> {
   const householdId = await getSession()
   if (!householdId) throw new Error('Not authenticated')
 
@@ -66,7 +99,7 @@ export async function deleteCategory(id: string) {
     .eq('id', id)
     .eq('household_id', householdId)
 
-  if (error) throw error
+  if (error) throw new Error(`Failed to delete category: ${error.message}`)
 
   revalidatePath('/')
 }
