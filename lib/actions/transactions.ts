@@ -52,7 +52,7 @@ function validateDescription(description: string | undefined): void {
 }
 
 // Transaction with joined category data
-type TransactionWithCategory = Transaction & {
+export type TransactionWithCategory = Transaction & {
   category: {
     id: string
     name: string
