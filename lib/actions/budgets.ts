@@ -5,7 +5,21 @@ import { supabase } from '@/lib/supabase'
 import { getSession } from '@/lib/auth'
 import { MonthlyBudget } from '@/lib/types'
 
+function validateMonth(month: string): void {
+  const monthRegex = /^\d{4}-\d{2}$/
+  if (!monthRegex.test(month)) {
+    throw new Error('Invalid month format. Expected YYYY-MM')
+  }
+  const [yearStr, monthStr] = month.split('-')
+  const year = parseInt(yearStr, 10)
+  const parsedMonth = parseInt(monthStr, 10)
+  if (isNaN(year) || isNaN(parsedMonth) || parsedMonth < 1 || parsedMonth > 12) {
+    throw new Error('Invalid month format. Expected YYYY-MM')
+  }
+}
+
 export async function getMonthlyBudgets(month: string): Promise<MonthlyBudget[]> {
+  validateMonth(month)
   const householdId = await getSession()
   if (!householdId) return []
 
@@ -25,6 +39,8 @@ export async function getMonthlyBudgets(month: string): Promise<MonthlyBudget[]>
 export async function setBudgetAmount(categoryId: string, month: string, amount: number): Promise<void> {
   const householdId = await getSession()
   if (!householdId) throw new Error('Not authenticated')
+
+  validateMonth(month)
 
   // Validate amount is non-negative
   if (amount < 0) {
@@ -64,21 +80,12 @@ export async function copyBudgetFromPreviousMonth(currentMonth: string): Promise
   const householdId = await getSession()
   if (!householdId) throw new Error('Not authenticated')
 
-  // Validate month format (YYYY-MM)
-  const monthRegex = /^\d{4}-\d{2}$/
-  if (!monthRegex.test(currentMonth)) {
-    throw new Error('Invalid month format. Expected YYYY-MM')
-  }
+  validateMonth(currentMonth)
 
   // Calculate previous month using proper date arithmetic
   const [yearStr, monthStr] = currentMonth.split('-')
   const year = parseInt(yearStr, 10)
   const month = parseInt(monthStr, 10)
-
-  // Validate parsed values
-  if (isNaN(year) || isNaN(month) || month < 1 || month > 12) {
-    throw new Error('Invalid month format. Expected YYYY-MM')
-  }
 
   // Create date object for current month, then subtract 1 month
   const currentDate = new Date(year, month - 1, 1)
