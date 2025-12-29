@@ -159,3 +159,32 @@ export async function autoRolloverIfNeeded(month: string): Promise<void> {
     // This is expected for the first month of budgeting
   }
 }
+
+export async function getBudgetDataForWarnings(): Promise<{
+  budgetMap: Map<string, number>
+  spentMap: Map<string, number>
+}> {
+  const householdId = await getSession()
+  if (!householdId) {
+    return { budgetMap: new Map(), spentMap: new Map() }
+  }
+
+  const currentMonth = new Date().toISOString().slice(0, 7) // YYYY-MM
+
+  // Get budgets for current month
+  const budgets = await getMonthlyBudgets(currentMonth)
+  const budgetMap = new Map(budgets.map((b) => [b.category_id, b.budgeted_amount]))
+
+  // Get transactions for current month
+  const { getTransactionsByMonth } = await import('./transactions')
+  const transactions = await getTransactionsByMonth(currentMonth)
+
+  // Calculate spent per category
+  const spentMap = new Map<string, number>()
+  transactions.forEach((t) => {
+    const current = spentMap.get(t.category_id) ?? 0
+    spentMap.set(t.category_id, current + t.amount)
+  })
+
+  return { budgetMap, spentMap }
+}
