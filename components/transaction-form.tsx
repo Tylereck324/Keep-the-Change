@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -21,15 +21,22 @@ import {
 import { createTransaction, updateTransaction, TransactionWithCategory } from '@/lib/actions/transactions'
 import { createCategory } from '@/lib/actions/categories'
 import { Category } from '@/lib/types'
+import { BudgetWarning } from '@/components/budget-warning'
+import {
+  wouldExceedBudget,
+  getSortedCategorySuggestions,
+} from '@/lib/utils/budget-warnings'
 
 interface TransactionFormProps {
   categories: Category[]
   transaction?: TransactionWithCategory
   trigger: React.ReactNode
   onSuccess?: () => void
+  budgetMap?: Record<string, number>
+  spentMap?: Record<string, number>
 }
 
-export function TransactionForm({ categories, transaction, trigger, onSuccess }: TransactionFormProps) {
+export function TransactionForm({ categories, transaction, trigger, onSuccess, budgetMap, spentMap }: TransactionFormProps) {
   const [open, setOpen] = useState(false)
   const [amount, setAmount] = useState(transaction?.amount?.toString() ?? '')
   const [categoryId, setCategoryId] = useState(transaction?.category_id ?? '')
@@ -41,8 +48,73 @@ export function TransactionForm({ categories, transaction, trigger, onSuccess }:
   const [error, setError] = useState('')
   const [showNewCategory, setShowNewCategory] = useState(false)
   const [newCategoryName, setNewCategoryName] = useState('')
+  const [showWarning, setShowWarning] = useState(false)
+  const [warningData, setWarningData] = useState<{
+    categoryName: string
+    overage: number
+  } | null>(null)
+  const [warningDismissed, setWarningDismissed] = useState(false)
 
   const isEditing = !!transaction
+
+  // Reset warning dismissed flag when category changes
+  useEffect(() => {
+    setWarningDismissed(false)
+  }, [categoryId])
+
+  // Check for budget warnings when amount or category changes
+  useEffect(() => {
+    // Only check warnings if budgetMap and spentMap are provided
+    if (!budgetMap || !spentMap) {
+      setShowWarning(false)
+      setWarningData(null)
+      return
+    }
+
+    if (!amount || !categoryId) {
+      setShowWarning(false)
+      setWarningData(null)
+      return
+    }
+
+    const numAmount = parseFloat(amount)
+    if (isNaN(numAmount) || numAmount <= 0) {
+      setShowWarning(false)
+      setWarningData(null)
+      return
+    }
+
+    const budgeted = budgetMap[categoryId] ?? 0
+    const spent = spentMap[categoryId] ?? 0
+
+    // Only show warning if budget is set
+    if (budgeted === 0) {
+      setShowWarning(false)
+      setWarningData(null)
+      return
+    }
+
+    // Don't show warning if user has dismissed it
+    if (warningDismissed) {
+      setShowWarning(false)
+      setWarningData(null)
+      return
+    }
+
+    const { wouldExceed, overage } = wouldExceedBudget(numAmount, budgeted, spent)
+
+    if (wouldExceed) {
+      const category = categories.find((c) => c.id === categoryId)
+      setShowWarning(true)
+      setWarningData({
+        categoryName: category?.name ?? 'Unknown',
+        overage,
+      })
+    } else {
+      setShowWarning(false)
+      setWarningData(null)
+    }
+  }, [amount, categoryId, budgetMap, spentMap, categories, warningDismissed])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -103,6 +175,16 @@ export function TransactionForm({ categories, transaction, trigger, onSuccess }:
     }
   }
 
+  const handleSwitchCategory = (newCategoryId: string) => {
+    setCategoryId(newCategoryId)
+    // Warning will automatically update via useEffect
+  }
+
+  const handleKeepCategory = () => {
+    setShowWarning(false)
+    setWarningDismissed(true)
+  }
+
   const resetForm = () => {
     setAmount('')
     setCategoryId('')
@@ -111,7 +193,14 @@ export function TransactionForm({ categories, transaction, trigger, onSuccess }:
     setError('')
     setShowNewCategory(false)
     setNewCategoryName('')
+    setShowWarning(false)
+    setWarningData(null)
+    setWarningDismissed(false)
   }
+
+  const suggestions = showWarning && budgetMap && spentMap
+    ? getSortedCategorySuggestions(categories, budgetMap, spentMap, categoryId)
+    : []
 
   return (
     <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) resetForm(); }}>
@@ -185,6 +274,17 @@ export function TransactionForm({ categories, transaction, trigger, onSuccess }:
               </Select>
             )}
           </div>
+
+          {/* Budget Warning */}
+          {showWarning && warningData && (
+            <BudgetWarning
+              categoryName={warningData.categoryName}
+              overage={warningData.overage}
+              suggestions={suggestions}
+              onKeep={handleKeepCategory}
+              onSwitchCategory={handleSwitchCategory}
+            />
+          )}
 
           <div className="space-y-2">
             <Label htmlFor="description">Description (optional)</Label>

@@ -10,9 +10,11 @@ import { Category } from '@/lib/types'
 interface TransactionListProps {
   transactions: TransactionWithCategory[]
   categories: Category[]
+  budgetMap?: Record<string, number>
+  spentMap?: Record<string, number>
 }
 
-export function TransactionList({ transactions, categories }: TransactionListProps) {
+export function TransactionList({ transactions, categories, budgetMap, spentMap }: TransactionListProps) {
   const [deleting, setDeleting] = useState<string | null>(null)
 
   const handleDelete = async (id: string) => {
@@ -66,6 +68,8 @@ export function TransactionList({ transactions, categories }: TransactionListPro
                 categories={categories}
                 transaction={transaction}
                 trigger={<Button variant="ghost" size="sm">Edit</Button>}
+                budgetMap={budgetMap}
+                spentMap={spentMap}
               />
               <Button
                 variant="ghost"

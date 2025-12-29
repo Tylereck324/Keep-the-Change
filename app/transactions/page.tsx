@@ -2,6 +2,7 @@ import { getSession } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { getTransactions } from '@/lib/actions/transactions'
 import { getCategories } from '@/lib/actions/categories'
+import { getBudgetDataForWarnings } from '@/lib/actions/budgets'
 import { TransactionForm } from '@/components/transaction-form'
 import { TransactionList } from '@/components/transaction-list'
 import { Button } from '@/components/ui/button'
@@ -11,9 +12,10 @@ export default async function TransactionsPage() {
   const session = await getSession()
   if (!session) redirect('/')
 
-  const [transactions, categories] = await Promise.all([
+  const [transactions, categories, budgetData] = await Promise.all([
     getTransactions(),
     getCategories(),
+    getBudgetDataForWarnings(),
   ])
 
   const total = transactions.reduce((sum, t) => sum + t.amount, 0)
@@ -33,10 +35,17 @@ export default async function TransactionsPage() {
         <TransactionForm
           categories={categories}
           trigger={<Button>+ Add Transaction</Button>}
+          budgetMap={budgetData.budgetMap}
+          spentMap={budgetData.spentMap}
         />
       </div>
 
-      <TransactionList transactions={transactions} categories={categories} />
+      <TransactionList
+        transactions={transactions}
+        categories={categories}
+        budgetMap={budgetData.budgetMap}
+        spentMap={budgetData.spentMap}
+      />
     </main>
   )
 }
