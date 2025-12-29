@@ -1,10 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
 import { hashPin, createSession } from '@/lib/auth'
+import type { Database } from '@/lib/types'
+
+type HouseholdRow = Database['public']['Tables']['households']['Row']
+type HouseholdInsert = Database['public']['Tables']['households']['Insert']
 
 export async function POST(request: NextRequest) {
   try {
-    const { pin } = await request.json()
+    // Parse JSON with error handling
+    let body: unknown
+    try {
+      body = await request.json()
+    } catch (error: unknown) {
+      return NextResponse.json(
+        { error: 'Invalid JSON' },
+        { status: 400 }
+      )
+    }
+
+    const { pin } = body as { pin?: string }
 
     // Validate PIN
     if (!pin || pin.length < 4 || pin.length > 6 || !/^\d+$/.test(pin)) {
@@ -19,7 +34,7 @@ export async function POST(request: NextRequest) {
       .from('households')
       .select('id')
       .limit(1)
-      .single()
+      .maybeSingle()
 
     if (existing) {
       return NextResponse.json(
@@ -32,7 +47,11 @@ export async function POST(request: NextRequest) {
     const pinHash = await hashPin(pin)
     const { data: household, error } = await supabase
       .from('households')
-      .insert({ name: 'My Household', pin_hash: pinHash })
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .insert({
+        name: 'My Household',
+        pin_hash: pinHash
+      } as any)
       .select()
       .single()
 
@@ -44,10 +63,15 @@ export async function POST(request: NextRequest) {
     }
 
     // Create session
-    await createSession(household.id)
+    const householdData = household as HouseholdRow
+    await createSession(householdData.id)
 
     return NextResponse.json({ success: true })
-  } catch {
+  } catch (error: unknown) {
+    // Log error in development
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Setup error:', error)
+    }
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

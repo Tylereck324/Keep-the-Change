@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
 import { verifyPin, createSession } from '@/lib/auth'
+import type { Database } from '@/lib/types'
+
+type HouseholdRow = Database['public']['Tables']['households']['Row']
 
 // Rate limiting: track failed attempts in memory (resets on server restart)
 const failedAttempts = new Map<string, { count: number; lastAttempt: number }>()
@@ -9,7 +12,7 @@ const LOCKOUT_DURATION = 60 * 1000 // 1 minute
 
 export async function POST(request: NextRequest) {
   try {
-    const ip = request.headers.get('x-forwarded-for') ?? 'unknown'
+    const ip = request.headers.get('x-forwarded-for') ?? request.headers.get('cf-connecting-ip') ?? 'local'
     const now = Date.now()
 
     // Check rate limiting
@@ -27,11 +30,23 @@ export async function POST(request: NextRequest) {
       failedAttempts.delete(ip)
     }
 
-    const { pin } = await request.json()
-
-    if (!pin) {
+    // Parse JSON with error handling
+    let body: unknown
+    try {
+      body = await request.json()
+    } catch (error: unknown) {
       return NextResponse.json(
-        { error: 'PIN is required' },
+        { error: 'Invalid JSON' },
+        { status: 400 }
+      )
+    }
+
+    const { pin } = body as { pin?: string }
+
+    // Validate PIN format
+    if (!pin || pin.length < 4 || pin.length > 6 || !/^\d+$/.test(pin)) {
+      return NextResponse.json(
+        { error: 'PIN must be 4-6 digits' },
         { status: 400 }
       )
     }
@@ -41,7 +56,7 @@ export async function POST(request: NextRequest) {
       .from('households')
       .select('*')
       .limit(1)
-      .single()
+      .maybeSingle()
 
     if (!household) {
       return NextResponse.json(
@@ -51,7 +66,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Verify PIN
-    const isValid = await verifyPin(pin, household.pin_hash)
+    const householdData = household as HouseholdRow
+    const isValid = await verifyPin(pin, householdData.pin_hash)
 
     if (!isValid) {
       // Track failed attempt
@@ -68,10 +84,14 @@ export async function POST(request: NextRequest) {
     failedAttempts.delete(ip)
 
     // Create session
-    await createSession(household.id)
+    await createSession(householdData.id)
 
     return NextResponse.json({ success: true })
-  } catch {
+  } catch (error: unknown) {
+    // Log error in development
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Verify error:', error)
+    }
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
