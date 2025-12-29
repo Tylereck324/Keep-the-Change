@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { supabase } from '@/lib/supabase'
 import { getSession } from '@/lib/auth'
+import { getAutoRolloverSetting } from '@/lib/actions/settings'
 import { MonthlyBudget } from '@/lib/types'
 
 function validateMonth(month: string): void {
@@ -127,4 +128,34 @@ export async function copyBudgetFromPreviousMonth(currentMonth: string): Promise
 
   revalidatePath('/')
   revalidatePath('/budget')
+}
+
+export async function autoRolloverIfNeeded(month: string): Promise<void> {
+  const householdId = await getSession()
+  if (!householdId) return
+
+  validateMonth(month)
+
+  // Check if auto-rollover is enabled
+  const autoRolloverEnabled = await getAutoRolloverSetting()
+  if (!autoRolloverEnabled) return
+
+  // Check if current month already has budgets
+  const { data: existingBudgets } = await supabase
+    .from('monthly_budgets')
+    .select('id')
+    .eq('household_id', householdId)
+    .eq('month', month)
+    .limit(1)
+
+  // If budgets already exist for this month, don't auto-rollover
+  if (existingBudgets && existingBudgets.length > 0) return
+
+  // Try to copy from previous month (silently fail if no previous month exists)
+  try {
+    await copyBudgetFromPreviousMonth(month)
+  } catch (error) {
+    // Silently ignore errors (e.g., no previous month budget exists)
+    // This is expected for the first month of budgeting
+  }
 }

@@ -1,11 +1,12 @@
 import Link from 'next/link'
 import { getCategories } from '@/lib/actions/categories'
-import { getMonthlyBudgets } from '@/lib/actions/budgets'
+import { getMonthlyBudgets, autoRolloverIfNeeded } from '@/lib/actions/budgets'
 import { getTransactionsByMonth } from '@/lib/actions/transactions'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
 import { TransactionForm } from './transaction-form'
+import { RecentTransactions } from './recent-transactions'
 
 function getCurrentMonth() {
   const now = new Date()
@@ -14,6 +15,9 @@ function getCurrentMonth() {
 
 export async function Dashboard() {
   const currentMonth = getCurrentMonth()
+
+  // Auto-rollover budget from previous month if enabled and needed
+  await autoRolloverIfNeeded(currentMonth)
 
   const [categories, budgets, transactions] = await Promise.all([
     getCategories(),
@@ -84,6 +88,11 @@ export async function Dashboard() {
             </p>
           </CardContent>
         </Card>
+      </div>
+
+      {/* Recent Activity */}
+      <div className="mb-6">
+        <RecentTransactions transactions={transactions.slice(0, 5)} />
       </div>
 
       {/* Category Progress */}

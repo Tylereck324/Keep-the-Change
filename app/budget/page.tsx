@@ -1,7 +1,7 @@
 import { getSession } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { getCategories } from '@/lib/actions/categories'
-import { getMonthlyBudgets, copyBudgetFromPreviousMonth } from '@/lib/actions/budgets'
+import { getMonthlyBudgets, copyBudgetFromPreviousMonth, autoRolloverIfNeeded } from '@/lib/actions/budgets'
 import { CategoryForm } from '@/components/category-form'
 import { BudgetAmountInput } from '@/components/budget-amount-input'
 import { Button } from '@/components/ui/button'
@@ -18,6 +18,10 @@ export default async function BudgetPage() {
   if (!session) redirect('/')
 
   const currentMonth = getCurrentMonth()
+
+  // Auto-rollover budget from previous month if enabled and needed
+  await autoRolloverIfNeeded(currentMonth)
+
   const [categories, budgets] = await Promise.all([
     getCategories(),
     getMonthlyBudgets(currentMonth),

@@ -4,6 +4,7 @@ import { getCategories } from '@/lib/actions/categories'
 import { CategoryForm } from '@/components/category-form'
 import { ChangePinForm } from '@/components/change-pin-form'
 import { ThemeToggle } from '@/components/theme-toggle'
+import { AutoRolloverToggle } from '@/components/auto-rollover-toggle'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
@@ -30,6 +31,16 @@ export default async function SettingsPage() {
         </CardHeader>
         <CardContent>
           <ThemeToggle />
+        </CardContent>
+      </Card>
+
+      {/* Budget Settings */}
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle>Budget Settings</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <AutoRolloverToggle />
         </CardContent>
       </Card>
 
