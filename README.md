@@ -1,36 +1,122 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Budget App
 
-## Getting Started
+A shared household budget web app for two users with PIN-based authentication, envelope-style budgeting, and manual transaction entry.
 
-First, run the development server:
+## Features
+
+- **PIN Authentication**: Simple 4-6 digit PIN for shared household access
+- **Category Budgeting**: Create categories with budgeted amounts per month
+- **Transaction Management**: Manually add, edit, and delete transactions
+- **Dashboard**: View budget progress with color-coded indicators
+- **Month Rollover**: Copy budgets from previous month
+- **Settings**: Change PIN and manage categories
+
+## Tech Stack
+
+- **Frontend**: Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS
+- **UI Components**: shadcn/ui
+- **Backend**: Next.js Server Actions
+- **Database**: Supabase (PostgreSQL)
+- **Authentication**: PIN-based with bcrypt hashing
+
+## Prerequisites
+
+- Node.js 18+ and npm
+- A Supabase account and project
+
+## Setup Instructions
+
+### 1. Clone and Install
+
+```bash
+git clone <repository-url>
+cd BudgetApp
+npm install
+```
+
+### 2. Set Up Supabase
+
+1. Create a new project at [supabase.com](https://supabase.com)
+2. Go to Project Settings > API to find your credentials
+3. Go to SQL Editor and run the schema from `supabase/schema.sql`
+
+### 3. Configure Environment Variables
+
+Copy `.env.example` to `.env.local` and add your Supabase credentials:
+
+```bash
+cp .env.example .env.local
+```
+
+Edit `.env.local`:
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key-here
+```
+
+### 4. Run Development Server
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 5. First-Time Setup
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1. On first visit, you'll be prompted to create a PIN
+2. Add some categories in the Budget page
+3. Start adding transactions!
 
-## Learn More
+## Database Schema
 
-To learn more about Next.js, take a look at the following resources:
+The app uses four main tables:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- **households**: Stores household info and PIN hash
+- **categories**: Budget categories with names and colors
+- **monthly_budgets**: Budgeted amounts per category per month
+- **transactions**: Individual spending transactions
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+See `supabase/schema.sql` for the complete schema with indexes.
 
-## Deploy on Vercel
+## Deployment
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Deploy to Vercel
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. Push your code to GitHub
+2. Import the repository in [Vercel](https://vercel.com)
+3. Add environment variables in Vercel project settings
+4. Deploy!
+
+### Build for Production
+
+```bash
+npm run build
+npm start
+```
+
+**Note**: Build requires valid Supabase credentials in `.env.local`.
+
+## Project Structure
+
+```
+/app                    # Next.js App Router pages
+  /api/auth            # Authentication API routes
+  /budget              # Budget management page
+  /transactions        # Transaction list page
+  /settings            # Settings page
+/components            # React components
+  /ui                  # shadcn/ui components
+/lib
+  /actions             # Server actions for data mutations
+  /auth.ts             # Authentication utilities
+  /supabase.ts         # Supabase client
+  /types.ts            # TypeScript types
+/supabase
+  /schema.sql          # Database schema
+```
+
+## License
+
+MIT
