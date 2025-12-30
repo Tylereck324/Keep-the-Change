@@ -49,7 +49,7 @@ export function Step2Review({
   const [showCreateDialog, setShowCreateDialog] = useState(false)
   const [pendingCategoryIndex, setPendingCategoryIndex] = useState<number | null>(null)
 
-  // Auto-match categories on mount
+  // Auto-match categories on mount (only when transactions change, not when categories update)
   useEffect(() => {
     const matched = transactions.map((txn) => {
       const match = matchCategory(
@@ -64,7 +64,8 @@ export function Step2Review({
       }
     })
     setReviewedTransactions(matched)
-  }, [transactions, keywordsByCategory, merchantPatterns])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [transactions])
 
   const handleCategoryChange = (index: number, categoryId: string) => {
     if (categoryId === '__create__') {
