@@ -40,3 +40,7 @@ Users needed the ability to delete categories that were no longer relevant. The 
         - [x] Added `restoreCategory` server action.
         - [x] Added "Show Archived" toggle to Budget Page.
         - [x] Implemented "Restore" button in UI.
+    - [x] **Performance Optimization Fixes**:
+        - [x] Optimized Rollover: Check for budgets *first* to avoid blocking 99% of requests.
+        - [x] Code Cleanup: Removed redundant `budgetMap`.
+        - [x] UI Fix: Added "Uncategorized" card to Dashboard to show phantom spending.

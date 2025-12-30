@@ -18,31 +18,38 @@ function getCurrentMonth() {
 export async function Dashboard() {
   const currentMonth = getCurrentMonth()
 
-  // Auto-rollover budget from previous month if enabled and needed
-  await autoRolloverIfNeeded(currentMonth)
-
-  const [categories, budgets, transactions] = await Promise.all([
+  let [categories, budgets, transactions] = await Promise.all([
     getCategories(),
     getMonthlyBudgets(currentMonth),
     getTransactionsByMonth(currentMonth),
   ])
 
-  const budgetMap = new Map(budgets.map((b) => [b.category_id, b.budgeted_amount]))
+  // Only attempt auto-rollover if no budgets exist for current month
+  if (budgets.length === 0) {
+    await autoRolloverIfNeeded(currentMonth)
+    // Refetch budgets in case rollover occurred
+    budgets = await getMonthlyBudgets(currentMonth)
+  }
+
   const budgetObjectMap = new Map(budgets.map((b) => [b.category_id, b]))
 
   // Calculate spent per category
   const spentByCategory = new Map<string, number>()
+  let totalCategorizedSpent = 0
+  
   transactions.forEach((t) => {
     if (t.category_id) {
       spentByCategory.set(
         t.category_id,
         (spentByCategory.get(t.category_id) ?? 0) + t.amount
       )
+      totalCategorizedSpent += t.amount
     }
   })
 
   const totalBudgeted = budgets.reduce((sum, b) => sum + b.budgeted_amount, 0)
   const totalSpent = transactions.reduce((sum, t) => sum + t.amount, 0)
+  const uncategorizedSpent = totalSpent - totalCategorizedSpent
   const totalRemaining = totalBudgeted - totalSpent
 
   const monthName = new Date(currentMonth + '-01').toLocaleDateString('en-US', {
@@ -131,6 +138,31 @@ export async function Dashboard() {
                 />
               )
             })}
+            
+            {uncategorizedSpent > 0 && (
+              <Card>
+                <CardContent className="py-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full bg-slate-400" />
+                      <span className="font-medium">Uncategorized</span>
+                    </div>
+                    <span className="text-sm text-red-500">
+                      -${uncategorizedSpent.toFixed(2)}
+                    </span>
+                  </div>
+                  <Progress 
+                    value={100} 
+                    className="h-2" 
+                    style={{ ['--progress-color' as string]: '#94a3b8' }}
+                  />
+                  <div className="flex justify-between text-xs text-muted-foreground mt-1">
+                    <span>${uncategorizedSpent.toFixed(2)} spent</span>
+                    <span>$0.00 budgeted</span>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </div>
         )}
       </div>
