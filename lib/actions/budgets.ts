@@ -96,12 +96,13 @@ export async function copyBudgetFromPreviousMonth(currentMonth: string): Promise
   const prevMonth = currentDate.getMonth() + 1
   const prevMonthStr = `${prevYear}-${String(prevMonth).padStart(2, '0')}`
 
-  // Get previous month's budgets
+  // Get previous month's budgets, filtering out deleted categories
   const { data: prevBudgets, error: fetchError } = await supabase
     .from('monthly_budgets')
-    .select('category_id, budgeted_amount')
+    .select('category_id, budgeted_amount, categories!inner(deleted_at)')
     .eq('household_id', householdId)
     .eq('month', prevMonthStr)
+    .is('categories.deleted_at', null)
 
   if (fetchError) {
     throw new Error(`Failed to fetch previous month budgets: ${fetchError.message}`)

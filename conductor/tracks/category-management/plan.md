@@ -30,3 +30,6 @@ Users needed the ability to delete categories that were no longer relevant. The 
         - [x] Updated schema to include `deleted_at`.
         - [x] Changed logic to "Archive" instead of "Delete" to preserve historical data.
         - [x] Updated UI terminology to "Archive".
+    - [x] **QA & Edge Case Fixes**:
+        - [x] Prevent creating duplicate category names (active only).
+        - [x] Prevent ghost budgets (don't rollover archived categories).
