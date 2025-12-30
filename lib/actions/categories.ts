@@ -62,9 +62,7 @@ export async function createCategory(name: string, color: string): Promise<Categ
 
   if (error) throw new Error(`Failed to create category: ${error.message}`)
 
-  revalidatePath('/')
-  revalidatePath('/budget')
-  revalidatePath('/transactions')
+  revalidatePath('/', 'layout')
   return data as Category
 }
 
@@ -88,9 +86,7 @@ export async function updateCategory(id: string, name: string, color: string): P
 
   if (error) throw new Error(`Failed to update category: ${error.message}`)
 
-  revalidatePath('/')
-  revalidatePath('/budget')
-  revalidatePath('/transactions')
+  revalidatePath('/', 'layout')
 }
 
 export async function deleteCategory(id: string): Promise<void> {
@@ -105,7 +101,5 @@ export async function deleteCategory(id: string): Promise<void> {
 
   if (error) throw new Error(`Failed to delete category: ${error.message}`)
 
-  revalidatePath('/')
-  revalidatePath('/budget')
-  revalidatePath('/transactions')
+  revalidatePath('/', 'layout')
 }

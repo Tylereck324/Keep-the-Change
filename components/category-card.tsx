@@ -56,7 +56,6 @@ export function CategoryCard({ category, budget, spent }: CategoryCardProps) {
             <CategoryForm
               category={category}
               trigger={<Button variant="ghost" size="sm">Edit</Button>}
-              onDelete={handleDelete}
             />
             <DeleteCategoryDialog
               trigger={

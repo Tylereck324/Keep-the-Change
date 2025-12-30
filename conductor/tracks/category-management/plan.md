@@ -21,4 +21,8 @@ Users needed the ability to delete categories that were no longer relevant. The 
         - [x] Extract colors to constants.
         - [x] Centralize delete logic in `CategoryForm` and `DeleteCategoryDialog`.
         - [x] Improve `revalidatePath` specificity to ensure `/budget` and `/transactions` update.
-        - [x] Verified that uncategorized transactions do not disappear from "Total Spent" (they are included in the sum, just not in category breakdowns).
+        - [x] Verified that uncategorized transactions do not disappear from "Total Spent".
+    - [x] **Lead Dev Review Fixes**:
+        - [x] Removed Nested Modal (removed delete button from Form).
+        - [x] Renamed `lib/constants/index.ts` to `lib/constants.ts`.
+        - [x] Used `revalidatePath('/', 'layout')` for robust cache clearing.

@@ -15,17 +15,16 @@ import { toast } from 'sonner'
 import { createCategory, updateCategory } from '@/lib/actions/categories'
 
 import { CATEGORY_COLORS } from '@/lib/constants'
-import { DeleteCategoryDialog } from './delete-category-dialog'
 
 interface CategoryFormProps {
   category?: { id: string; name: string; color: string }
   trigger: React.ReactNode
   onSuccess?: () => void
-  onDelete?: () => void
 }
 
-export function CategoryForm({ category, trigger, onSuccess, onDelete }: CategoryFormProps) {
+export function CategoryForm({ category, trigger, onSuccess }: CategoryFormProps) {
   const [open, setOpen] = useState(false)
+
   const [name, setName] = useState(category?.name ?? '')
   const [color, setColor] = useState(category?.color ?? CATEGORY_COLORS[0])
   const [loading, setLoading] = useState(false)
@@ -111,21 +110,6 @@ export function CategoryForm({ category, trigger, onSuccess, onDelete }: Categor
             <Button type="submit" className="flex-1" disabled={loading}>
               {loading ? 'Saving...' : isEditing ? 'Save Changes' : 'Create Category'}
             </Button>
-            {isEditing && onDelete && (
-              <DeleteCategoryDialog
-                trigger={
-                  <Button
-                    type="button"
-                    variant="destructive"
-                    disabled={loading}
-                  >
-                    Delete
-                  </Button>
-                }
-                onConfirm={onDelete}
-                loading={loading}
-              />
-            )}
           </div>
         </form>
       </DialogContent>
