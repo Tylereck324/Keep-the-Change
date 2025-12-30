@@ -28,9 +28,12 @@ export async function Dashboard() {
 
   const budgetMap = new Map(budgets.map((b) => [b.category_id, b.budgeted_amount]))
 
-  // Separate income and expenses
-  const incomeTransactions = transactions.filter((t) => t.type === 'income')
-  const expenseTransactions = transactions.filter((t) => t.type !== 'income')
+  // Separate income and expenses (check type OR category name)
+  const isIncome = (t: typeof transactions[0]) =>
+    t.type === 'income' || t.category?.name?.toLowerCase() === 'income'
+
+  const incomeTransactions = transactions.filter(isIncome)
+  const expenseTransactions = transactions.filter((t) => !isIncome(t))
 
   // Calculate spent per category (expenses only)
   const spentByCategory = new Map<string, number>()

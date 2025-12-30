@@ -72,10 +72,12 @@ export async function getMerchantInsights(): Promise<MerchantInsight[]> {
   const householdId = await getSession()
   if (!householdId) throw new Error('Not authenticated')
 
-  // Get last 6 months of expense transactions only
+  // Get last 6 months of expense transactions only (exclude income type and income category)
   const { startDate, endDate } = getLastNMonthsRange(6)
   const allTransactions = await getTransactions({ startDate, endDate })
-  const transactions = allTransactions.filter(t => t.type !== 'income')
+  const isIncome = (t: typeof allTransactions[0]) =>
+    t.type === 'income' || t.category?.name?.toLowerCase() === 'income'
+  const transactions = allTransactions.filter(t => !isIncome(t))
 
   // Group by normalized merchant name
   const merchantGroups = new Map<string, TransactionWithCategory[]>()
@@ -150,10 +152,12 @@ export async function getRecurringCharges(): Promise<RecurringCharge[]> {
   const householdId = await getSession()
   if (!householdId) throw new Error('Not authenticated')
 
-  // Get last 6 months of expense transactions only
+  // Get last 6 months of expense transactions only (exclude income type and income category)
   const { startDate, endDate } = getLastNMonthsRange(6)
   const allTransactions = await getTransactions({ startDate, endDate })
-  const transactions = allTransactions.filter(t => t.type !== 'income')
+  const isIncome = (t: typeof allTransactions[0]) =>
+    t.type === 'income' || t.category?.name?.toLowerCase() === 'income'
+  const transactions = allTransactions.filter(t => !isIncome(t))
 
   // Group by normalized merchant name
   const merchantGroups = new Map<string, TransactionWithCategory[]>()

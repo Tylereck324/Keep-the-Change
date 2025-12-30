@@ -45,9 +45,12 @@ export async function getMonthlyReport(month: string): Promise<MonthlyReport> {
     getTransactions({ startDate: `${month}-01`, endDate: `${month}-31` }),
   ])
 
-  // Separate income and expenses
-  const incomeTransactions = allTransactions.filter(t => t.type === 'income')
-  const expenseTransactions = allTransactions.filter(t => t.type !== 'income')
+  // Separate income and expenses (check type OR category name)
+  const isIncome = (t: typeof allTransactions[0]) =>
+    t.type === 'income' || t.category?.name?.toLowerCase() === 'income'
+
+  const incomeTransactions = allTransactions.filter(isIncome)
+  const expenseTransactions = allTransactions.filter(t => !isIncome(t))
 
   const budgetMap = new Map(budgets.map((b) => [b.category_id, b.budgeted_amount]))
   const categoryMap = new Map(categories.map((c) => [c.id, c]))

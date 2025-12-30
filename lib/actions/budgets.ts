@@ -183,9 +183,14 @@ export async function getBudgetDataForWarnings(): Promise<{
   const transactions = await getTransactionsByMonth(currentMonth)
 
   // Calculate spent per category (only for expense transactions with valid category_id)
+  // Exclude both income type and income category
   const spentMapTemp = new Map<string, number>()
   transactions
-    .filter((t): t is typeof t & { category_id: string } => t.category_id != null && t.type !== 'income')
+    .filter((t): t is typeof t & { category_id: string } =>
+      t.category_id != null &&
+      t.type !== 'income' &&
+      t.category?.name?.toLowerCase() !== 'income'
+    )
     .forEach((t) => {
       const current = spentMapTemp.get(t.category_id) ?? 0
       spentMapTemp.set(t.category_id, current + t.amount)
