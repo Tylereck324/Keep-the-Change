@@ -192,7 +192,7 @@ export async function learnMerchantPattern(
     .from('merchant_patterns')
     // @ts-expect-error - Supabase client type inference issue
     .upsert(patternData, {
-      onConflict: 'household_id,merchant_name',
+      onConflict: 'household_id,merchant_name,category_id',
       ignoreDuplicates: false,
     })
 

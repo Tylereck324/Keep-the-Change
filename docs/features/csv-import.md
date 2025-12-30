@@ -34,9 +34,9 @@ The CSV Import feature allows users to bulk import transactions from CSV files e
 
 4. **Step 3: Duplicate Check**
    - The system detects potential duplicates by comparing:
-     - Date (within 2 days)
+     - Same date (exact match)
      - Amount (exact match)
-     - Description (70%+ similarity)
+     - Description (80%+ similarity)
    - For each duplicate found, you can:
      - **Skip import**: Don't import this transaction (it's already in your system)
      - **Import anyway**: Import it as a new transaction
@@ -149,9 +149,9 @@ The CSV import feature is built with the following components:
 3. **duplicate-detector.ts**
    - `findDuplicates(importTransactions, existingTransactions)`: Detects potential duplicates
    - Matching criteria:
-     - Date within ±2 days
+     - Same date (exact match)
      - Exact amount match
-     - Description similarity ≥70% (using Levenshtein distance)
+     - Description similarity ≥80% (using Levenshtein distance)
    - Returns array of `{ importIndex, existingTransaction, similarity }`
 
 #### UI Components

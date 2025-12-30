@@ -19,10 +19,16 @@ export function ImportButton({
   existingTransactions,
 }: ImportButtonProps) {
   const [open, setOpen] = useState(false)
+  const hasNoCategories = categories.length === 0
 
   return (
     <>
-      <Button variant="outline" onClick={() => setOpen(true)}>
+      <Button
+        variant="outline"
+        onClick={() => setOpen(true)}
+        disabled={hasNoCategories}
+        title={hasNoCategories ? 'You must create at least one category before importing transactions. Go to Settings to add categories.' : undefined}
+      >
         Import CSV
       </Button>
       <CSVImportWizard
