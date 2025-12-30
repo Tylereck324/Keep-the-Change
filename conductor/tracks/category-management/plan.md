@@ -33,3 +33,6 @@ Users needed the ability to delete categories that were no longer relevant. The 
     - [x] **QA & Edge Case Fixes**:
         - [x] Prevent creating duplicate category names (active only).
         - [x] Prevent ghost budgets (don't rollover archived categories).
+    - [x] **Senior Dev Optimization Fixes**:
+        - [x] Fixed Regression: Restored "Archive" capability to Budget Page by creating `BudgetCategoryRow`.
+        - [x] Refactored `Dashboard` to use shared `CategoryCard` instead of code duplication.

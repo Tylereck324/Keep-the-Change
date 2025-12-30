@@ -8,6 +8,7 @@ import { Progress } from '@/components/ui/progress'
 import { TransactionForm } from './transaction-form'
 import { RecentTransactions } from './recent-transactions'
 import { CategoryForm } from './category-form'
+import { CategoryCard } from './category-card'
 
 function getCurrentMonth() {
   const now = new Date()
@@ -27,6 +28,7 @@ export async function Dashboard() {
   ])
 
   const budgetMap = new Map(budgets.map((b) => [b.category_id, b.budgeted_amount]))
+  const budgetObjectMap = new Map(budgets.map((b) => [b.category_id, b]))
 
   // Calculate spent per category
   const spentByCategory = new Map<string, number>()
@@ -117,52 +119,16 @@ export async function Dashboard() {
         ) : (
           <div className="space-y-3">
             {categories.map((category) => {
-              const budgeted = budgetMap.get(category.id) ?? 0
+              const budget = budgetObjectMap.get(category.id)
               const spent = spentByCategory.get(category.id) ?? 0
-              const remaining = budgeted - spent
-              const percentUsed = budgeted > 0 ? Math.min((spent / budgeted) * 100, 100) : 0
 
               return (
-                <Card key={category.id}>
-                  <CardContent className="py-3">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-2">
-                        <div
-                          className="w-3 h-3 rounded-full"
-                          style={{ backgroundColor: category.color }}
-                        />
-                        <span className="font-medium">{category.name}</span>
-                        <CategoryForm
-                          category={category}
-                          trigger={
-                            <button className="text-muted-foreground hover:text-foreground transition-colors">
-                              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
-                                <path d="m15 5 4 4"/>
-                              </svg>
-                            </button>
-                          }
-                        />
-                      </div>
-                      <span className={`text-sm ${remaining < 0 ? 'text-red-500' : 'text-muted-foreground'}`}>
-                        ${remaining.toFixed(2)} left
-                      </span>
-                    </div>
-                    <Progress
-                      value={percentUsed}
-                      className="h-2"
-                      style={{
-                        ['--progress-color' as string]:
-                          percentUsed >= 100 ? '#ef4444' :
-                          percentUsed >= 75 ? '#eab308' : '#22c55e'
-                      }}
-                    />
-                    <div className="flex justify-between text-xs text-muted-foreground mt-1">
-                      <span>${spent.toFixed(2)} spent</span>
-                      <span>${budgeted.toFixed(2)} budgeted</span>
-                    </div>
-                  </CardContent>
-                </Card>
+                <CategoryCard
+                  key={category.id}
+                  category={category}
+                  budget={budget}
+                  spent={spent}
+                />
               )
             })}
           </div>

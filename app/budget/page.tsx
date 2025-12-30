@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation'
 import { getCategories } from '@/lib/actions/categories'
 import { getMonthlyBudgets, copyBudgetFromPreviousMonth, autoRolloverIfNeeded } from '@/lib/actions/budgets'
 import { CategoryForm } from '@/components/category-form'
-import { BudgetAmountInput } from '@/components/budget-amount-input'
+import { BudgetCategoryRow } from '@/components/budget-category-row'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import Link from 'next/link'
@@ -75,33 +75,12 @@ export default async function BudgetPage() {
           {categories.map((category) => {
             const budget = budgetMap.get(category.id)
             return (
-              <Card key={category.id}>
-                <CardContent className="flex items-center justify-between py-3">
-                  <div className="flex items-center gap-2">
-                    <div
-                      className="w-3 h-3 rounded-full"
-                      style={{ backgroundColor: category.color }}
-                    />
-                    <span className="font-medium">{category.name}</span>
-                    <CategoryForm
-                      category={category}
-                      trigger={
-                        <button className="text-muted-foreground hover:text-foreground transition-colors">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
-                            <path d="m15 5 4 4"/>
-                          </svg>
-                        </button>
-                      }
-                    />
-                  </div>
-                  <BudgetAmountInput
-                    categoryId={category.id}
-                    month={currentMonth}
-                    initialAmount={budget?.budgeted_amount ?? 0}
-                  />
-                </CardContent>
-              </Card>
+              <BudgetCategoryRow
+                key={category.id}
+                category={category}
+                budget={budget}
+                month={currentMonth}
+              />
             )
           })}
         </div>
