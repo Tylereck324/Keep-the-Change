@@ -54,7 +54,7 @@ export default async function ReportsPage() {
       </div>
 
       {/* Overview Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm text-muted-foreground">Total Budgeted</CardTitle>
@@ -76,7 +76,7 @@ export default async function ReportsPage() {
             <CardTitle className="text-sm text-muted-foreground">Remaining</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className={`text-2xl font-bold ${monthlyReport.totalRemaining < 0 ? 'text-red-500' : ''}`}>
+            <p className={`text-2xl font-bold ${monthlyReport.totalRemaining < 0 ? 'text-destructive' : ''}`}>
               ${monthlyReport.totalRemaining.toFixed(2)}
             </p>
           </CardContent>
@@ -112,12 +112,12 @@ export default async function ReportsPage() {
             </div>
             <div className="flex justify-between border-t pt-2">
               <span className="text-muted-foreground">Projected Over/Under Budget:</span>
-              <span className={`font-bold ${forecast.projectedOverUnder < 0 ? 'text-red-500' : 'text-green-500 dark:text-green-400'}`}>
+              <span className={`font-bold ${forecast.projectedOverUnder < 0 ? 'text-destructive' : 'text-green-600 dark:text-green-400'}`}>
                 {forecast.projectedOverUnder < 0 ? '-' : '+'}${Math.abs(forecast.projectedOverUnder).toFixed(2)}
               </span>
             </div>
             {forecast.projectedOverUnder < 0 && (
-              <p className="text-sm text-red-500 mt-2">
+              <p className="text-sm text-destructive mt-2">
                 ⚠️ Warning: At this rate, you'll exceed your budget by ${Math.abs(forecast.projectedOverUnder).toFixed(2)}
               </p>
             )}
@@ -172,7 +172,7 @@ export default async function ReportsPage() {
                     </td>
                     <td className="text-right py-2 px-2">${cat.budgeted.toFixed(2)}</td>
                     <td className="text-right py-2 px-2">${cat.spent.toFixed(2)}</td>
-                    <td className={`text-right py-2 px-2 ${cat.remaining < 0 ? 'text-red-500' : ''}`}>
+                    <td className={`text-right py-2 px-2 ${cat.remaining < 0 ? 'text-destructive' : ''}`}>
                       ${cat.remaining.toFixed(2)}
                     </td>
                     <td className="text-right py-2 px-2">{cat.percentUsed.toFixed(0)}%</td>
@@ -230,7 +230,7 @@ export default async function ReportsPage() {
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Total Saved (YTD)</p>
-              <p className={`text-2xl font-bold ${yearSummary.totalSaved < 0 ? 'text-red-500' : 'text-green-500 dark:text-green-400'}`}>
+              <p className={`text-2xl font-bold ${yearSummary.totalSaved < 0 ? 'text-destructive' : 'text-green-600 dark:text-green-400'}`}>
                 ${yearSummary.totalSaved.toFixed(2)}
               </p>
             </div>

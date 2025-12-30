@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -41,7 +42,9 @@ export function ChangePinForm() {
       const data = await response.json()
 
       if (!response.ok) {
-        setError(data.error || 'Failed to change PIN')
+        const errorMsg = data.error || 'Failed to change PIN'
+        setError(errorMsg)
+        toast.error(errorMsg)
         return
       }
 
@@ -49,8 +52,11 @@ export function ChangePinForm() {
       setCurrentPin('')
       setNewPin('')
       setConfirmPin('')
+      toast.success('PIN changed successfully!')
     } catch {
-      setError('Failed to connect. Please try again.')
+      const errorMsg = 'Failed to connect. Please try again.'
+      setError(errorMsg)
+      toast.error(errorMsg)
     } finally {
       setLoading(false)
     }

@@ -116,7 +116,7 @@ export async function Dashboard() {
               style={{
                 ['--progress-color' as string]:
                   totalExpenses > totalBudgeted ? '#ef4444' :
-                  totalExpenses > totalBudgeted * 0.75 ? '#eab308' : '#22c55e'
+                    totalExpenses > totalBudgeted * 0.75 ? '#eab308' : '#22c55e'
               }}
             />
             <p className={`text-xs mt-1 ${totalBudgeted - totalExpenses < 0 ? 'text-red-500' : 'text-muted-foreground'}`}>
@@ -159,27 +159,31 @@ export async function Dashboard() {
 
               return (
                 <Card key={category.id}>
-                  <CardContent className="py-3">
+                  <CardContent className="py-4">
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2">
                         <div
-                          className="w-3 h-3 rounded-full"
+                          className="w-3 h-3 rounded-full flex-shrink-0"
                           style={{ backgroundColor: category.color }}
+                          aria-hidden="true"
                         />
                         <span className="font-medium">{category.name}</span>
                         <CategoryForm
                           category={category}
                           trigger={
-                            <button className="text-muted-foreground hover:text-foreground transition-colors">
-                              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
-                                <path d="m15 5 4 4"/>
+                            <button
+                              className="text-muted-foreground hover:text-foreground transition-colors p-1 -m-1"
+                              aria-label={`Edit ${category.name} category`}
+                            >
+                              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                                <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+                                <path d="m15 5 4 4" />
                               </svg>
                             </button>
                           }
                         />
                       </div>
-                      <span className={`text-sm ${remaining < 0 ? 'text-red-500' : 'text-muted-foreground'}`}>
+                      <span className={`text-sm ${remaining < 0 ? 'text-destructive' : 'text-muted-foreground'}`}>
                         ${remaining.toFixed(2)} left
                       </span>
                     </div>
@@ -189,7 +193,7 @@ export async function Dashboard() {
                       style={{
                         ['--progress-color' as string]:
                           percentUsed >= 100 ? '#ef4444' :
-                          percentUsed >= 75 ? '#eab308' : '#22c55e'
+                            percentUsed >= 75 ? '#eab308' : '#22c55e'
                       }}
                     />
                     <div className="flex justify-between text-xs text-muted-foreground mt-1">

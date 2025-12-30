@@ -1,9 +1,21 @@
 'use client'
 
 import { useState } from 'react'
+import { toast } from 'sonner'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog'
 import { CategoryForm } from './category-form'
 import { deleteCategory } from '@/lib/actions/categories'
 import { Category, MonthlyBudget } from '@/lib/types'
@@ -28,13 +40,13 @@ export function CategoryCard({ category, budget, spent }: CategoryCardProps) {
   }
 
   const handleDelete = async () => {
-    if (!confirm('Delete this category? Transactions will be uncategorized.')) return
-
     setDeleting(true)
     try {
       await deleteCategory(category.id)
+      toast.success(`Category "${category.name}" deleted`)
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Failed to delete')
+      const message = err instanceof Error ? err.message : 'Failed to delete'
+      toast.error(message)
     } finally {
       setDeleting(false)
     }
@@ -46,35 +58,62 @@ export function CategoryCard({ category, budget, spent }: CategoryCardProps) {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div
-              className="w-3 h-3 rounded-full"
+              className="w-3 h-3 rounded-full flex-shrink-0"
               style={{ backgroundColor: category.color }}
+              aria-hidden="true"
             />
             <CardTitle className="text-lg">{category.name}</CardTitle>
           </div>
           <div className="flex gap-1">
             <CategoryForm
               category={category}
-              trigger={<Button variant="ghost" size="sm">Edit</Button>}
+              trigger={
+                <Button variant="ghost" size="sm" aria-label={`Edit ${category.name} category`}>
+                  Edit
+                </Button>
+              }
             />
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleDelete}
-              disabled={deleting}
-            >
-              Delete
-            </Button>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  disabled={deleting}
+                  aria-label={`Delete ${category.name} category`}
+                >
+                  {deleting ? 'Deleting...' : 'Delete'}
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Delete "{category.name}"?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Any transactions using this category will become uncategorized.
+                    This action cannot be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={handleDelete}
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  >
+                    Delete Category
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </div>
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="pt-0">
         <div className="space-y-2">
           <div className="flex justify-between text-sm">
             <span>${spent.toFixed(2)} spent</span>
             <span>${budgeted.toFixed(2)} budgeted</span>
           </div>
           <Progress value={percentUsed} className="h-2" style={{ ['--progress-color' as string]: getProgressColor() }} />
-          <p className={`text-sm ${remaining < 0 ? 'text-red-500' : 'text-muted-foreground'}`}>
+          <p className={`text-sm ${remaining < 0 ? 'text-destructive' : 'text-muted-foreground'}`}>
             ${Math.abs(remaining).toFixed(2)} {remaining < 0 ? 'over budget' : 'remaining'}
           </p>
         </div>

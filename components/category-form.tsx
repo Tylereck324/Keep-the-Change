@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -53,9 +54,12 @@ export function CategoryForm({ category, trigger, onSuccess }: CategoryFormProps
       setOpen(false)
       setName('')
       setColor(COLORS[0])
+      toast.success(isEditing ? 'Category updated' : 'Category created')
       onSuccess?.()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong')
+      const message = err instanceof Error ? err.message : 'Something went wrong'
+      setError(message)
+      toast.error(message)
     } finally {
       setLoading(false)
     }
@@ -90,11 +94,12 @@ export function CategoryForm({ category, trigger, onSuccess }: CategoryFormProps
                 <button
                   key={c}
                   type="button"
-                  className={`w-8 h-8 rounded-full border-2 ${
-                    color === c ? 'border-foreground' : 'border-transparent'
-                  }`}
+                  className={`w-8 h-8 rounded-full border-2 ${color === c ? 'border-foreground' : 'border-transparent'
+                    }`}
                   style={{ backgroundColor: c }}
                   onClick={() => setColor(c)}
+                  aria-label={`Select color ${c}`}
+                  aria-pressed={color === c}
                 />
               ))}
             </div>

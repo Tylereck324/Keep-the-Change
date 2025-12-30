@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { toast } from 'sonner'
 import { Input } from '@/components/ui/input'
 import { setBudgetAmount } from '@/lib/actions/budgets'
 
@@ -21,8 +22,10 @@ export function BudgetAmountInput({ categoryId, month, initialAmount }: BudgetAm
     setSaving(true)
     try {
       await setBudgetAmount(categoryId, month, numAmount)
+      toast.success('Budget updated')
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Failed to save')
+      const message = err instanceof Error ? err.message : 'Failed to save'
+      toast.error(message)
       setAmount(initialAmount.toString())
     } finally {
       setSaving(false)

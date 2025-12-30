@@ -44,40 +44,40 @@ export function MerchantTable({ data }: MerchantTableProps) {
   })
 
   const SortIcon = ({ column }: { column: SortKey }) => {
-    if (sortKey !== column) return <span className="text-gray-400 dark:text-gray-500 ml-1">↕</span>
+    if (sortKey !== column) return <span className="text-muted-foreground ml-1">↕</span>
     return <span className="ml-1">{sortOrder === 'asc' ? '↑' : '↓'}</span>
   }
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-gray-900 dark:text-gray-100">Merchant Breakdown</CardTitle>
+        <CardTitle className="text-foreground">Merchant Breakdown</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="overflow-x-auto">
-          <table className="w-full text-gray-900 dark:text-gray-100">
+          <table className="w-full text-foreground">
             <thead>
-              <tr className="border-b border-gray-200 dark:border-gray-700">
+              <tr className="border-b border-border">
                 <th
-                  className="text-left py-2 px-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 font-semibold"
+                  className="text-left py-2 px-2 cursor-pointer hover:bg-muted font-semibold"
                   onClick={() => handleSort('displayName')}
                 >
                   Merchant<SortIcon column="displayName" />
                 </th>
                 <th
-                  className="text-right py-2 px-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 font-semibold"
+                  className="text-right py-2 px-2 cursor-pointer hover:bg-muted font-semibold"
                   onClick={() => handleSort('totalSpent')}
                 >
                   Total Spent<SortIcon column="totalSpent" />
                 </th>
                 <th
-                  className="text-right py-2 px-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 font-semibold"
+                  className="text-right py-2 px-2 cursor-pointer hover:bg-muted font-semibold"
                   onClick={() => handleSort('transactionCount')}
                 >
                   Transactions<SortIcon column="transactionCount" />
                 </th>
                 <th
-                  className="text-right py-2 px-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 font-semibold"
+                  className="text-right py-2 px-2 cursor-pointer hover:bg-muted font-semibold"
                   onClick={() => handleSort('averageAmount')}
                 >
                   Avg Amount<SortIcon column="averageAmount" />
@@ -87,7 +87,7 @@ export function MerchantTable({ data }: MerchantTableProps) {
             </thead>
             <tbody>
               {sortedData.map((merchant, index) => (
-                <tr key={merchant.merchant} className="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800">
+                <tr key={merchant.merchant} className="border-b border-border hover:bg-muted/50">
                   <td className="py-2 px-2">
                     <span className="font-medium">{merchant.displayName}</span>
                   </td>
@@ -97,7 +97,7 @@ export function MerchantTable({ data }: MerchantTableProps) {
                   <td className="text-right py-2 px-2">
                     {merchant.transactionCount}
                   </td>
-                  <td className="text-right py-2 px-2 text-gray-500 dark:text-gray-400">
+                  <td className="text-right py-2 px-2 text-muted-foreground">
                     ${merchant.averageAmount.toFixed(2)}
                   </td>
                   <td className="py-2 px-2">
@@ -110,7 +110,7 @@ export function MerchantTable({ data }: MerchantTableProps) {
                         <span className="text-sm">{merchant.primaryCategory.name}</span>
                       </div>
                     ) : (
-                      <span className="text-sm text-gray-500 dark:text-gray-400">Uncategorized</span>
+                      <span className="text-sm text-muted-foreground">Uncategorized</span>
                     )}
                   </td>
                 </tr>

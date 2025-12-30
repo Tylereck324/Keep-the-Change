@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
+import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -158,9 +159,12 @@ export function TransactionForm({ categories, transaction, trigger, onSuccess, b
       }
       setOpen(false)
       resetForm()
+      toast.success(isEditing ? 'Transaction updated' : 'Transaction added')
       onSuccess?.()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong')
+      const message = err instanceof Error ? err.message : 'Something went wrong'
+      setError(message)
+      toast.error(message)
     } finally {
       setLoading(false)
     }
@@ -176,7 +180,9 @@ export function TransactionForm({ categories, transaction, trigger, onSuccess, b
       setShowNewCategory(false)
       setNewCategoryName('')
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create category')
+      const message = err instanceof Error ? err.message : 'Failed to create category'
+      setError(message)
+      toast.error(message)
     } finally {
       setLoading(false)
     }
@@ -229,22 +235,20 @@ export function TransactionForm({ categories, transaction, trigger, onSuccess, b
             <button
               type="button"
               onClick={() => setTransactionType('expense')}
-              className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
-                !isIncome
+              className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${!isIncome
                   ? 'bg-primary text-primary-foreground'
                   : 'text-muted-foreground hover:text-foreground'
-              }`}
+                }`}
             >
               Expense
             </button>
             <button
               type="button"
               onClick={() => setTransactionType('income')}
-              className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
-                isIncome
+              className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${isIncome
                   ? 'bg-green-600 text-white'
                   : 'text-muted-foreground hover:text-foreground'
-              }`}
+                }`}
             >
               Income
             </button>
