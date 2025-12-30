@@ -21,15 +21,17 @@ export function CategoryBreakdownChart({ data }: CategoryBreakdownChartProps) {
       <CardContent>
         <ResponsiveContainer width="100%" height={300}>
           <BarChart data={data}>
-            <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
             <XAxis
               dataKey="categoryName"
               className="text-xs"
-              tick={{ fill: 'hsl(var(--muted-foreground))' }}
+              tick={{ fill: 'hsl(var(--foreground))' }}
+              stroke="hsl(var(--border))"
             />
             <YAxis
               className="text-xs"
-              tick={{ fill: 'hsl(var(--muted-foreground))' }}
+              tick={{ fill: 'hsl(var(--foreground))' }}
+              stroke="hsl(var(--border))"
               tickFormatter={(value) => `$${value}`}
             />
             <Tooltip
@@ -37,12 +39,13 @@ export function CategoryBreakdownChart({ data }: CategoryBreakdownChartProps) {
                 backgroundColor: 'hsl(var(--popover))',
                 border: '1px solid hsl(var(--border))',
                 borderRadius: '8px',
+                color: 'hsl(var(--popover-foreground))',
               }}
               formatter={(value: number | undefined) => value !== undefined ? `$${value.toFixed(2)}` : '$0.00'}
             />
-            <Legend />
-            <Bar dataKey="budgeted" fill="hsl(var(--muted))" name="Budgeted" />
-            <Bar dataKey="spent" fill="hsl(var(--primary))" name="Spent" />
+            <Legend wrapperStyle={{ color: 'hsl(var(--foreground))' }} />
+            <Bar dataKey="budgeted" fill="#9ca3af" name="Budgeted" />
+            <Bar dataKey="spent" fill="#3b82f6" name="Spent" />
           </BarChart>
         </ResponsiveContainer>
       </CardContent>

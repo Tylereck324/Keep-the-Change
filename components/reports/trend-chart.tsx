@@ -26,15 +26,17 @@ export function TrendChart({ data }: TrendChartProps) {
       <CardContent>
         <ResponsiveContainer width="100%" height={300}>
           <LineChart data={formattedData}>
-            <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
             <XAxis
               dataKey="month"
               className="text-xs"
-              tick={{ fill: 'hsl(var(--muted-foreground))' }}
+              tick={{ fill: 'hsl(var(--foreground))' }}
+              stroke="hsl(var(--border))"
             />
             <YAxis
               className="text-xs"
-              tick={{ fill: 'hsl(var(--muted-foreground))' }}
+              tick={{ fill: 'hsl(var(--foreground))' }}
+              stroke="hsl(var(--border))"
               tickFormatter={(value) => `$${value}`}
             />
             <Tooltip
@@ -42,14 +44,15 @@ export function TrendChart({ data }: TrendChartProps) {
                 backgroundColor: 'hsl(var(--popover))',
                 border: '1px solid hsl(var(--border))',
                 borderRadius: '8px',
+                color: 'hsl(var(--popover-foreground))',
               }}
               formatter={(value: number | undefined) => value !== undefined ? `$${value.toFixed(2)}` : '$0.00'}
             />
-            <Legend />
+            <Legend wrapperStyle={{ color: 'hsl(var(--foreground))' }} />
             <Line
               type="monotone"
               dataKey="budgeted"
-              stroke="hsl(var(--muted-foreground))"
+              stroke="#9ca3af"
               strokeWidth={2}
               strokeDasharray="5 5"
               name="Budgeted"
@@ -57,7 +60,7 @@ export function TrendChart({ data }: TrendChartProps) {
             <Line
               type="monotone"
               dataKey="spent"
-              stroke="hsl(var(--primary))"
+              stroke="#3b82f6"
               strokeWidth={2}
               name="Spent"
             />

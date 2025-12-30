@@ -21,15 +21,17 @@ export function SpendingTimelineChart({ data }: SpendingTimelineChartProps) {
       <CardContent>
         <ResponsiveContainer width="100%" height={300}>
           <LineChart data={formattedData}>
-            <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
             <XAxis
               dataKey="date"
               className="text-xs"
-              tick={{ fill: 'hsl(var(--muted-foreground))' }}
+              tick={{ fill: 'hsl(var(--foreground))' }}
+              stroke="hsl(var(--border))"
             />
             <YAxis
               className="text-xs"
-              tick={{ fill: 'hsl(var(--muted-foreground))' }}
+              tick={{ fill: 'hsl(var(--foreground))' }}
+              stroke="hsl(var(--border))"
               tickFormatter={(value) => `$${value}`}
             />
             <Tooltip
@@ -37,15 +39,16 @@ export function SpendingTimelineChart({ data }: SpendingTimelineChartProps) {
                 backgroundColor: 'hsl(var(--popover))',
                 border: '1px solid hsl(var(--border))',
                 borderRadius: '8px',
+                color: 'hsl(var(--popover-foreground))',
               }}
               formatter={(value: number | undefined) => value !== undefined ? [`$${value.toFixed(2)}`, 'Spent'] : ['$0.00', 'Spent']}
             />
             <Line
               type="monotone"
               dataKey="amount"
-              stroke="hsl(var(--primary))"
+              stroke="#3b82f6"
               strokeWidth={2}
-              dot={{ fill: 'hsl(var(--primary))', r: 4 }}
+              dot={{ fill: '#3b82f6', r: 4 }}
             />
           </LineChart>
         </ResponsiveContainer>

@@ -28,25 +28,28 @@ export function MerchantChart({ data }: MerchantChartProps) {
             layout="vertical"
             margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
           >
-            <CartesianGrid strokeDasharray="3 3" className="stroke-muted" horizontal={false} />
+            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" horizontal={false} />
             <XAxis
               type="number"
               className="text-xs"
-              tick={{ fill: 'hsl(var(--muted-foreground))' }}
+              tick={{ fill: 'hsl(var(--foreground))' }}
               tickFormatter={(value) => `$${value}`}
+              stroke="hsl(var(--border))"
             />
             <YAxis
               type="category"
               dataKey="name"
               width={120}
               className="text-xs"
-              tick={{ fill: 'hsl(var(--muted-foreground))' }}
+              tick={{ fill: 'hsl(var(--foreground))' }}
+              stroke="hsl(var(--border))"
             />
             <Tooltip
               contentStyle={{
                 backgroundColor: 'hsl(var(--popover))',
                 border: '1px solid hsl(var(--border))',
                 borderRadius: '8px',
+                color: 'hsl(var(--popover-foreground))',
               }}
               formatter={(value: number | undefined) => value !== undefined ? [`$${value.toFixed(2)}`, 'Total Spent'] : ['$0.00', 'Total Spent']}
               labelFormatter={(label, payload) => {
@@ -58,7 +61,7 @@ export function MerchantChart({ data }: MerchantChartProps) {
             />
             <Bar
               dataKey="amount"
-              fill="hsl(var(--primary))"
+              fill="#3b82f6"
               radius={[0, 4, 4, 0]}
             />
           </BarChart>
