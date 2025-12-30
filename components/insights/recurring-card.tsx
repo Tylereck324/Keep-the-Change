@@ -32,14 +32,14 @@ export function RecurringCard({ charge }: RecurringCardProps) {
       <CardContent className="pt-4">
         <div className="flex items-start justify-between mb-2">
           <div className="flex-1 min-w-0">
-            <h3 className="font-semibold truncate">{charge.displayName}</h3>
+            <h3 className="font-semibold truncate text-gray-900 dark:text-gray-100">{charge.displayName}</h3>
             {charge.category && (
               <div className="flex items-center gap-1 mt-1">
                 <div
                   className="w-2 h-2 rounded-full"
                   style={{ backgroundColor: charge.category.color }}
                 />
-                <span className="text-xs text-muted-foreground">{charge.category.name}</span>
+                <span className="text-xs text-gray-500 dark:text-gray-400">{charge.category.name}</span>
               </div>
             )}
           </div>
@@ -50,20 +50,20 @@ export function RecurringCard({ charge }: RecurringCardProps) {
 
         <div className="space-y-1">
           <div className="flex justify-between">
-            <span className="text-sm text-muted-foreground">Amount</span>
-            <span className="font-medium">${charge.amount.toFixed(2)}</span>
+            <span className="text-sm text-gray-500 dark:text-gray-400">Amount</span>
+            <span className="font-medium text-gray-900 dark:text-gray-100">${charge.amount.toFixed(2)}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-sm text-muted-foreground">Monthly Est.</span>
-            <span className="font-semibold text-primary">${charge.estimatedMonthlyCost.toFixed(2)}</span>
+            <span className="text-sm text-gray-500 dark:text-gray-400">Monthly Est.</span>
+            <span className="font-semibold text-blue-600 dark:text-blue-400">${charge.estimatedMonthlyCost.toFixed(2)}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-sm text-muted-foreground">Last Charge</span>
-            <span className="text-sm">{formatDate(charge.lastChargeDate)}</span>
+            <span className="text-sm text-gray-500 dark:text-gray-400">Last Charge</span>
+            <span className="text-sm text-gray-900 dark:text-gray-100">{formatDate(charge.lastChargeDate)}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-sm text-muted-foreground">Occurrences</span>
-            <span className="text-sm">{charge.transactionCount}</span>
+            <span className="text-sm text-gray-500 dark:text-gray-400">Occurrences</span>
+            <span className="text-sm text-gray-900 dark:text-gray-100">{charge.transactionCount}</span>
           </div>
         </div>
 

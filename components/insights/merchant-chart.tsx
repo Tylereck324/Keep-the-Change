@@ -19,7 +19,7 @@ export function MerchantChart({ data }: MerchantChartProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Top 10 Merchants</CardTitle>
+        <CardTitle className="text-gray-900 dark:text-gray-100">Top 10 Merchants</CardTitle>
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={350}>
@@ -28,28 +28,28 @@ export function MerchantChart({ data }: MerchantChartProps) {
             layout="vertical"
             margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
           >
-            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" horizontal={false} />
+            <CartesianGrid strokeDasharray="3 3" stroke="#374151" horizontal={false} />
             <XAxis
               type="number"
               className="text-xs"
-              tick={{ fill: 'hsl(var(--foreground))' }}
+              tick={{ fill: '#9ca3af' }}
               tickFormatter={(value) => `$${value}`}
-              stroke="hsl(var(--border))"
+              stroke="#374151"
             />
             <YAxis
               type="category"
               dataKey="name"
               width={120}
               className="text-xs"
-              tick={{ fill: 'hsl(var(--foreground))' }}
-              stroke="hsl(var(--border))"
+              tick={{ fill: '#9ca3af' }}
+              stroke="#374151"
             />
             <Tooltip
               contentStyle={{
-                backgroundColor: 'hsl(var(--popover))',
-                border: '1px solid hsl(var(--border))',
+                backgroundColor: '#1f2937',
+                border: '1px solid #374151',
                 borderRadius: '8px',
-                color: 'hsl(var(--popover-foreground))',
+                color: '#f3f4f6',
               }}
               formatter={(value: number | undefined) => value !== undefined ? [`$${value.toFixed(2)}`, 'Total Spent'] : ['$0.00', 'Total Spent']}
               labelFormatter={(label, payload) => {

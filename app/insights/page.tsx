@@ -25,47 +25,47 @@ export default async function InsightsPage() {
   return (
     <main className="container mx-auto p-4 max-w-6xl">
       <div className="mb-6">
-        <Link href="/" className="text-sm text-muted-foreground hover:underline">
+        <Link href="/" className="text-sm text-gray-500 dark:text-gray-400 hover:underline">
           ← Dashboard
         </Link>
-        <h1 className="text-2xl font-bold">Spending Insights</h1>
-        <p className="text-muted-foreground">Last 6 months analysis</p>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Spending Insights</h1>
+        <p className="text-gray-500 dark:text-gray-400">Last 6 months analysis</p>
       </div>
 
       {/* Overview Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-muted-foreground">Unique Merchants</CardTitle>
+            <CardTitle className="text-sm text-gray-500 dark:text-gray-400">Unique Merchants</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold">{merchantInsights.length}</p>
+            <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{merchantInsights.length}</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-muted-foreground">Total Spend (6 mo)</CardTitle>
+            <CardTitle className="text-sm text-gray-500 dark:text-gray-400">Total Spend (6 mo)</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold">${totalMerchantSpend.toFixed(2)}</p>
+            <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">${totalMerchantSpend.toFixed(2)}</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-muted-foreground">Recurring (Monthly Est.)</CardTitle>
+            <CardTitle className="text-sm text-gray-500 dark:text-gray-400">Recurring (Monthly Est.)</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold">${totalRecurringMonthly.toFixed(2)}</p>
+            <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">${totalRecurringMonthly.toFixed(2)}</p>
           </CardContent>
         </Card>
       </div>
 
       {/* Recurring Charges Section */}
       <div className="mb-6">
-        <h2 className="text-lg font-semibold mb-3">Detected Recurring Charges</h2>
+        <h2 className="text-lg font-semibold mb-3 text-gray-900 dark:text-gray-100">Detected Recurring Charges</h2>
         {recurringCharges.length === 0 ? (
           <Card>
-            <CardContent className="py-8 text-center text-muted-foreground">
+            <CardContent className="py-8 text-center text-gray-500 dark:text-gray-400">
               No recurring charges detected yet. Keep adding transactions to detect patterns.
             </CardContent>
           </Card>
@@ -87,10 +87,10 @@ export default async function InsightsPage() {
 
       {/* Merchant Table */}
       <div className="mb-6">
-        <h2 className="text-lg font-semibold mb-3">All Merchants</h2>
+        <h2 className="text-lg font-semibold mb-3 text-gray-900 dark:text-gray-100">All Merchants</h2>
         {merchantInsights.length === 0 ? (
           <Card>
-            <CardContent className="py-8 text-center text-muted-foreground">
+            <CardContent className="py-8 text-center text-gray-500 dark:text-gray-400">
               No transactions yet. Start adding transactions to see merchant insights.
             </CardContent>
           </Card>
