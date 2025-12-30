@@ -279,6 +279,9 @@ export default async function ReportsPage() {
         <Link href="/" className="flex-1">
           <Button variant="outline" className="w-full">Back to Dashboard</Button>
         </Link>
+        <Link href="/insights" className="flex-1">
+          <Button variant="outline" className="w-full">Spending Insights</Button>
+        </Link>
         <Link href="/transactions" className="flex-1">
           <Button variant="outline" className="w-full">View Transactions</Button>
         </Link>
