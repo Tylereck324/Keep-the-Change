@@ -17,11 +17,13 @@ interface DeleteCategoryDialogProps {
   trigger: React.ReactNode
   onConfirm: () => void
   loading?: boolean
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
 }
 
-export function DeleteCategoryDialog({ trigger, onConfirm, loading }: DeleteCategoryDialogProps) {
+export function DeleteCategoryDialog({ trigger, onConfirm, loading, open, onOpenChange }: DeleteCategoryDialogProps) {
   return (
-    <AlertDialog>
+    <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogTrigger asChild>
         {trigger}
       </AlertDialogTrigger>

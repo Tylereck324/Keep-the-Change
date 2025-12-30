@@ -18,6 +18,7 @@ interface CategoryCardProps {
 
 export function CategoryCard({ category, budget, spent }: CategoryCardProps) {
   const [deleting, setDeleting] = useState(false)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
 
   const budgeted = budget?.budgeted_amount ?? 0
   const remaining = budgeted - spent
@@ -34,6 +35,7 @@ export function CategoryCard({ category, budget, spent }: CategoryCardProps) {
     try {
       await deleteCategory(category.id)
       toast.success('Category deleted')
+      setDeleteDialogOpen(false)
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Failed to delete')
     } finally {
@@ -58,6 +60,8 @@ export function CategoryCard({ category, budget, spent }: CategoryCardProps) {
               trigger={<Button variant="ghost" size="sm">Edit</Button>}
             />
             <DeleteCategoryDialog
+              open={deleteDialogOpen}
+              onOpenChange={setDeleteDialogOpen}
               trigger={
                 <Button
                   variant="ghost"
