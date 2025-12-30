@@ -12,6 +12,6 @@ Users needed the ability to delete categories that were no longer relevant. The 
     - [x] Add server action `deleteCategory`.
     - [x] Update `CategoryForm` to include a "Delete" button when editing.
     - [x] Add client-side confirmation dialog to prevent accidental deletion.
-- [ ] **Verification & Polish**
-    - [ ] Verify database behavior: Ensure transactions linked to a deleted category are set to NULL (uncategorized) or similar, rather than causing foreign key errors.
-    - [ ] Add visual feedback (toast notification) upon successful deletion (currently uses `alert` on error, silent success with revalidation).
+- [x] **Verification & Polish**
+    - [x] Verify database behavior: Ensure transactions linked to a deleted category are set to NULL (uncategorized) or similar, rather than causing foreign key errors. (Verified via schema: `on delete set null`)
+    - [x] Add visual feedback (toast notification) upon successful deletion (currently uses `alert` on error, silent success with revalidation). (Implemented using `sonner`)

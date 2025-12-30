@@ -5,6 +5,8 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { AppHeader } from "@/components/app-header";
 import { QuickAddWrapper } from "@/components/quick-add-wrapper";
 
+import { Toaster } from "@/components/ui/sonner";
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -39,6 +41,7 @@ export default function RootLayout({
           <AppHeader />
           <QuickAddWrapper />
           {children}
+          <Toaster />
         </ThemeProvider>
       </body>
     </html>

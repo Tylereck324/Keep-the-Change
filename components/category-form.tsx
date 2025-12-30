@@ -11,6 +11,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
+import { toast } from 'sonner'
 import { createCategory, updateCategory, deleteCategory } from '@/lib/actions/categories'
 
 const COLORS = [
@@ -47,15 +48,20 @@ export function CategoryForm({ category, trigger, onSuccess }: CategoryFormProps
     try {
       if (isEditing) {
         await updateCategory(category.id, name.trim(), color)
+        toast.success('Category updated')
       } else {
         await createCategory(name.trim(), color)
+        toast.success('Category created')
       }
       setOpen(false)
-      setName('')
-      setColor(COLORS[0])
+      if (!isEditing) {
+        setName('')
+        setColor(COLORS[0])
+      }
       onSuccess?.()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong')
+      toast.error('Failed to save category')
     } finally {
       setLoading(false)
     }
@@ -113,10 +119,13 @@ export function CategoryForm({ category, trigger, onSuccess }: CategoryFormProps
                   setLoading(true)
                   try {
                     await deleteCategory(category.id)
+                    toast.success('Category deleted')
                     setOpen(false)
                     onSuccess?.()
                   } catch (err) {
-                    setError(err instanceof Error ? err.message : 'Failed to delete')
+                    const message = err instanceof Error ? err.message : 'Failed to delete'
+                    setError(message)
+                    toast.error(message)
                     setLoading(false)
                   }
                 }}

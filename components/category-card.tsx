@@ -7,6 +7,7 @@ import { Progress } from '@/components/ui/progress'
 import { CategoryForm } from './category-form'
 import { deleteCategory } from '@/lib/actions/categories'
 import { Category, MonthlyBudget } from '@/lib/types'
+import { toast } from 'sonner'
 
 interface CategoryCardProps {
   category: Category
@@ -33,8 +34,9 @@ export function CategoryCard({ category, budget, spent }: CategoryCardProps) {
     setDeleting(true)
     try {
       await deleteCategory(category.id)
+      toast.success('Category deleted')
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Failed to delete')
+      toast.error(err instanceof Error ? err.message : 'Failed to delete')
     } finally {
       setDeleting(false)
     }
