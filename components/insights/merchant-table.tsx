@@ -55,39 +55,39 @@ export function MerchantTable({ data }: MerchantTableProps) {
       </CardHeader>
       <CardContent>
         <div className="overflow-x-auto">
-          <table className="w-full">
+          <table className="w-full text-foreground">
             <thead>
-              <tr className="border-b">
+              <tr className="border-b border-border">
                 <th
-                  className="text-left py-2 px-2 cursor-pointer hover:bg-muted/50"
+                  className="text-left py-2 px-2 cursor-pointer hover:bg-muted/50 font-semibold"
                   onClick={() => handleSort('displayName')}
                 >
                   Merchant<SortIcon column="displayName" />
                 </th>
                 <th
-                  className="text-right py-2 px-2 cursor-pointer hover:bg-muted/50"
+                  className="text-right py-2 px-2 cursor-pointer hover:bg-muted/50 font-semibold"
                   onClick={() => handleSort('totalSpent')}
                 >
                   Total Spent<SortIcon column="totalSpent" />
                 </th>
                 <th
-                  className="text-right py-2 px-2 cursor-pointer hover:bg-muted/50"
+                  className="text-right py-2 px-2 cursor-pointer hover:bg-muted/50 font-semibold"
                   onClick={() => handleSort('transactionCount')}
                 >
                   Transactions<SortIcon column="transactionCount" />
                 </th>
                 <th
-                  className="text-right py-2 px-2 cursor-pointer hover:bg-muted/50"
+                  className="text-right py-2 px-2 cursor-pointer hover:bg-muted/50 font-semibold"
                   onClick={() => handleSort('averageAmount')}
                 >
                   Avg Amount<SortIcon column="averageAmount" />
                 </th>
-                <th className="text-left py-2 px-2">Category</th>
+                <th className="text-left py-2 px-2 font-semibold">Category</th>
               </tr>
             </thead>
             <tbody>
               {sortedData.map((merchant, index) => (
-                <tr key={merchant.merchant} className="border-b hover:bg-muted/30">
+                <tr key={merchant.merchant} className="border-b border-border hover:bg-muted/30">
                   <td className="py-2 px-2">
                     <span className="font-medium">{merchant.displayName}</span>
                   </td>

@@ -147,20 +147,20 @@ export default async function ReportsPage() {
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table className="w-full text-foreground">
               <thead>
-                <tr className="border-b">
-                  <th className="text-left py-2 px-2">Category</th>
-                  <th className="text-right py-2 px-2">Budgeted</th>
-                  <th className="text-right py-2 px-2">Spent</th>
-                  <th className="text-right py-2 px-2">Remaining</th>
-                  <th className="text-right py-2 px-2">% Used</th>
-                  <th className="text-center py-2 px-2">Status</th>
+                <tr className="border-b border-border">
+                  <th className="text-left py-2 px-2 font-semibold">Category</th>
+                  <th className="text-right py-2 px-2 font-semibold">Budgeted</th>
+                  <th className="text-right py-2 px-2 font-semibold">Spent</th>
+                  <th className="text-right py-2 px-2 font-semibold">Remaining</th>
+                  <th className="text-right py-2 px-2 font-semibold">% Used</th>
+                  <th className="text-center py-2 px-2 font-semibold">Status</th>
                 </tr>
               </thead>
               <tbody>
                 {monthlyReport.categories.map((cat) => (
-                  <tr key={cat.categoryId} className="border-b">
+                  <tr key={cat.categoryId} className="border-b border-border">
                     <td className="py-2 px-2">
                       <div className="flex items-center gap-2">
                         <div

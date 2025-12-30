@@ -300,9 +300,9 @@ export function Step2Review({
       )}
 
       {/* Transactions table */}
-      <div className="border rounded-lg overflow-hidden">
+      <div className="border border-border rounded-lg overflow-hidden">
         <div className="overflow-x-auto max-h-96 overflow-y-auto">
-          <table className="w-full">
+          <table className="w-full text-foreground">
             <thead className="bg-muted sticky top-0">
               <tr>
                 <th className="p-2 text-left">
@@ -314,17 +314,17 @@ export function Step2Review({
                     onCheckedChange={handleSelectAll}
                   />
                 </th>
-                <th className="p-2 text-left text-sm font-medium">Date</th>
-                <th className="p-2 text-left text-sm font-medium">Description</th>
-                <th className="p-2 text-right text-sm font-medium">Amount</th>
-                <th className="p-2 text-left text-sm font-medium">Category</th>
+                <th className="p-2 text-left text-sm font-semibold text-foreground">Date</th>
+                <th className="p-2 text-left text-sm font-semibold text-foreground">Description</th>
+                <th className="p-2 text-right text-sm font-semibold text-foreground">Amount</th>
+                <th className="p-2 text-left text-sm font-semibold text-foreground">Category</th>
               </tr>
             </thead>
             <tbody>
               {filteredTransactions.map(({ txn, index }) => (
                 <tr
                   key={index}
-                  className={`border-t ${getRowColor(txn.matchType)}`}
+                  className={`border-t border-border ${getRowColor(txn.matchType)}`}
                 >
                   <td className="p-2">
                     <Checkbox
