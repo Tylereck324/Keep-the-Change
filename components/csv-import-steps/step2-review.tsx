@@ -10,6 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { InlineCategoryCreate } from '@/components/inline-category-create'
 import { matchCategory, type MatchType } from '@/lib/utils/category-matcher'
 import type { ParsedTransaction } from '@/lib/utils/csv-parser'
 import type { Category, CategoryKeyword, MerchantPattern } from '@/lib/types'
@@ -26,6 +27,7 @@ interface Step2ReviewProps {
   merchantPatterns: MerchantPattern[]
   onComplete: (transactions: ReviewedTransaction[]) => void
   onBack: () => void
+  onCategoryCreated: (category: Category) => void
 }
 
 export function Step2Review({
@@ -35,11 +37,14 @@ export function Step2Review({
   merchantPatterns,
   onComplete,
   onBack,
+  onCategoryCreated,
 }: Step2ReviewProps) {
   const [reviewedTransactions, setReviewedTransactions] = useState<ReviewedTransaction[]>([])
   const [selectedRows, setSelectedRows] = useState<Set<number>>(new Set())
   const [bulkCategoryId, setBulkCategoryId] = useState<string>('')
   const [filter, setFilter] = useState<'all' | 'uncategorized'>('all')
+  const [showCreateDialog, setShowCreateDialog] = useState(false)
+  const [pendingCategoryIndex, setPendingCategoryIndex] = useState<number | null>(null)
 
   // Auto-match categories on mount
   useEffect(() => {
@@ -59,6 +64,13 @@ export function Step2Review({
   }, [transactions, keywordsByCategory, merchantPatterns])
 
   const handleCategoryChange = (index: number, categoryId: string) => {
+    if (categoryId === '__create__') {
+      // Open create dialog for this specific transaction
+      setPendingCategoryIndex(index)
+      setShowCreateDialog(true)
+      return
+    }
+
     setReviewedTransactions((prev) =>
       prev.map((txn, i) =>
         i === index
@@ -66,6 +78,20 @@ export function Step2Review({
           : txn
       )
     )
+  }
+
+  const handleCategoryCreated = (newCategory: Category) => {
+    // Notify parent to update categories list
+    onCategoryCreated(newCategory)
+
+    // If created for a specific transaction, assign it
+    if (pendingCategoryIndex !== null) {
+      handleCategoryChange(pendingCategoryIndex, newCategory.id)
+      setPendingCategoryIndex(null)
+    } else {
+      // Created for bulk assignment
+      setBulkCategoryId(newCategory.id)
+    }
   }
 
   const handleRowSelect = (index: number, checked: boolean) => {
@@ -89,6 +115,16 @@ export function Step2Review({
     } else {
       setSelectedRows(new Set())
     }
+  }
+
+  const handleBulkCategoryChange = (categoryId: string) => {
+    if (categoryId === '__create__') {
+      // Open create dialog for bulk assignment
+      setPendingCategoryIndex(null)
+      setShowCreateDialog(true)
+      return
+    }
+    setBulkCategoryId(categoryId)
   }
 
   const handleBulkAssign = () => {
@@ -181,7 +217,7 @@ export function Step2Review({
           <span className="text-sm font-medium">
             {selectedRows.size} selected
           </span>
-          <Select value={bulkCategoryId} onValueChange={setBulkCategoryId}>
+          <Select value={bulkCategoryId} onValueChange={handleBulkCategoryChange}>
             <SelectTrigger className="w-48">
               <SelectValue placeholder="Select category" />
             </SelectTrigger>
@@ -197,6 +233,11 @@ export function Step2Review({
                   </div>
                 </SelectItem>
               ))}
+              <SelectItem value="__create__">
+                <div className="flex items-center gap-2 text-primary font-medium">
+                  + Create Category
+                </div>
+              </SelectItem>
             </SelectContent>
           </Select>
           <Button
@@ -268,6 +309,11 @@ export function Step2Review({
                             </div>
                           </SelectItem>
                         ))}
+                        <SelectItem value="__create__">
+                          <div className="flex items-center gap-2 text-primary font-medium">
+                            + Create Category
+                          </div>
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                   </td>
@@ -292,6 +338,13 @@ export function Step2Review({
             : 'All transactions must have a category'}
         </Button>
       </div>
+
+      {/* Inline category creation dialog */}
+      <InlineCategoryCreate
+        open={showCreateDialog}
+        onOpenChange={setShowCreateDialog}
+        onCategoryCreated={handleCategoryCreated}
+      />
     </div>
   )
 }

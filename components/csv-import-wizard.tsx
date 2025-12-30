@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   Dialog,
   DialogContent,
@@ -36,6 +36,14 @@ export function CSVImportWizard({
   const [reviewedTransactions, setReviewedTransactions] = useState<ReviewedTransaction[]>([])
   const [transactionsToImport, setTransactionsToImport] = useState<ReviewedTransaction[]>([])
 
+  // Local mutable categories list (starts from props, can be updated during import)
+  const [localCategories, setLocalCategories] = useState<Category[]>(categories)
+
+  // Sync local categories when prop changes
+  useEffect(() => {
+    setLocalCategories(categories)
+  }, [categories])
+
   const handleStep1Complete = (result: ParseResult) => {
     setParseResult(result)
     setStep(2)
@@ -56,12 +64,17 @@ export function CSVImportWizard({
     handleClose()
   }
 
+  const handleCategoryCreated = (newCategory: Category) => {
+    setLocalCategories((prev) => [...prev, newCategory])
+  }
+
   const handleClose = () => {
     // Reset state when closing
     setStep(1)
     setParseResult(null)
     setReviewedTransactions([])
     setTransactionsToImport([])
+    setLocalCategories(categories) // Reset to original categories
     onOpenChange(false)
   }
 
@@ -80,11 +93,12 @@ export function CSVImportWizard({
           {step === 2 && parseResult && (
             <Step2Review
               transactions={parseResult.transactions}
-              categories={categories}
+              categories={localCategories}
               keywordsByCategory={keywordsByCategory}
               merchantPatterns={merchantPatterns}
               onComplete={handleStep2Complete}
               onBack={() => setStep(1)}
+              onCategoryCreated={handleCategoryCreated}
             />
           )}
 
@@ -102,7 +116,7 @@ export function CSVImportWizard({
           {step === 4 && (
             <Step4Confirm
               transactions={transactionsToImport}
-              categories={categories}
+              categories={localCategories}
               onComplete={handleStep4Complete}
               onBack={() => setStep(3)}
             />
