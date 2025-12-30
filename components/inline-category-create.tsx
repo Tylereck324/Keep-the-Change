@@ -42,10 +42,15 @@ export function InlineCategoryCreate({
   const [isCreating, setIsCreating] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  // Pre-fill name with suggestion when dialog opens
+  // Pre-fill name with suggestion when dialog opens, clear when it closes
   useEffect(() => {
     if (open && suggestedName) {
       setName(suggestedName)
+    } else if (!open) {
+      // Clear name when dialog closes to ensure fresh state on next open
+      setName('')
+      setColor(PRESET_COLORS[0])
+      setError(null)
     }
   }, [open, suggestedName])
 
