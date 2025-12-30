@@ -123,7 +123,6 @@ export async function createTransaction(data: {
 
   const { error } = await supabase
     .from('transactions')
-    // @ts-expect-error - Supabase client type inference issue
     .insert({
       household_id: householdId,
       category_id: data.categoryId || null,
@@ -172,7 +171,6 @@ export async function updateTransaction(
 
   const { error } = await supabase
     .from('transactions')
-    // @ts-expect-error - Supabase client type inference issue
     .update({
       category_id: data.categoryId || null,
       amount: data.amount,

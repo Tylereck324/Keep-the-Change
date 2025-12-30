@@ -14,7 +14,6 @@ export async function getAutoRolloverSetting(): Promise<boolean> {
     .eq('id', householdId)
     .maybeSingle()
 
-  // @ts-expect-error - Supabase client type inference issue
   return data?.auto_rollover_budget ?? false
 }
 
@@ -24,7 +23,6 @@ export async function setAutoRolloverSetting(enabled: boolean): Promise<void> {
 
   const { error } = await supabase
     .from('households')
-    // @ts-expect-error - Supabase client type inference issue
     .update({ auto_rollover_budget: enabled })
     .eq('id', householdId)
 

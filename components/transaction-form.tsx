@@ -40,7 +40,7 @@ interface TransactionFormProps {
 export function TransactionForm({ categories, transaction, trigger, onSuccess, budgetMap, spentMap }: TransactionFormProps) {
   const [open, setOpen] = useState(false)
   const [transactionType, setTransactionType] = useState<'income' | 'expense'>(
-    transaction?.type ?? 'expense'
+    (transaction?.type as 'income' | 'expense') ?? 'expense'
   )
   const [amount, setAmount] = useState(transaction?.amount?.toString() ?? '')
   const [categoryId, setCategoryId] = useState(transaction?.category_id ?? '')
@@ -236,8 +236,8 @@ export function TransactionForm({ categories, transaction, trigger, onSuccess, b
               type="button"
               onClick={() => setTransactionType('expense')}
               className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${!isIncome
-                  ? 'bg-primary text-primary-foreground'
-                  : 'text-muted-foreground hover:text-foreground'
+                ? 'bg-primary text-primary-foreground'
+                : 'text-muted-foreground hover:text-foreground'
                 }`}
             >
               Expense
@@ -246,8 +246,8 @@ export function TransactionForm({ categories, transaction, trigger, onSuccess, b
               type="button"
               onClick={() => setTransactionType('income')}
               className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${isIncome
-                  ? 'bg-green-600 text-white'
-                  : 'text-muted-foreground hover:text-foreground'
+                ? 'bg-green-600 text-white'
+                : 'text-muted-foreground hover:text-foreground'
                 }`}
             >
               Income

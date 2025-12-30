@@ -106,7 +106,6 @@ export async function addKeyword(categoryId: string, keyword: string): Promise<C
   // Insert the keyword
   const { data, error } = await supabase
     .from('category_keywords')
-    // @ts-expect-error - Supabase client type inference issue
     .insert({
       household_id: householdId,
       category_id: categoryId,

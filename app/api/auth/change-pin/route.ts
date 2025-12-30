@@ -51,7 +51,6 @@ export async function POST(request: NextRequest) {
     }
 
     // Verify current PIN
-    // @ts-expect-error - Supabase client type inference issue
     const isValid = await verifyPin(currentPin, household.pin_hash)
     if (!isValid) {
       return NextResponse.json({ error: 'Current PIN is incorrect' }, { status: 401 })
@@ -61,7 +60,6 @@ export async function POST(request: NextRequest) {
     const newPinHash = await hashPin(newPin)
     const { error: updateError } = await supabase
       .from('households')
-      // @ts-expect-error - Supabase client type inference issue
       .update({ pin_hash: newPinHash })
       .eq('id', householdId)
 

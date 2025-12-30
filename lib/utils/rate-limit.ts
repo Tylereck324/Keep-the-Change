@@ -81,7 +81,6 @@ export async function recordFailedAttempt(ip: string): Promise<void> {
         // First failed attempt
         await supabase
             .from('auth_attempts')
-            // @ts-expect-error - Supabase type inference issue, will be fixed in PR3
             .insert({
                 ip_address: ip,
                 attempt_count: 1,
@@ -103,7 +102,6 @@ export async function recordFailedAttempt(ip: string): Promise<void> {
 
         await supabase
             .from('auth_attempts')
-            // @ts-expect-error - Supabase type inference issue, will be fixed in PR3
             .update(updateData)
             .eq('ip_address', ip)
     }

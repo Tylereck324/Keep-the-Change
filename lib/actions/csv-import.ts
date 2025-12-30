@@ -98,7 +98,6 @@ export async function bulkImportTransactions(
     try {
       const { error } = await supabase
         .from('transactions')
-        // @ts-expect-error - Supabase client type inference issue
         .insert(insertData)
 
       if (error) {
@@ -195,7 +194,6 @@ export async function learnMerchantPattern(
   // Upsert: insert new pattern or update last_used_at if exists
   const { error } = await supabase
     .from('merchant_patterns')
-    // @ts-expect-error - Supabase client type inference issue
     .upsert(patternData, {
       onConflict: 'household_id,merchant_name,category_id',
       ignoreDuplicates: false,

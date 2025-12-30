@@ -42,7 +42,6 @@ export async function createCategory(name: string, color: string): Promise<Categ
 
   const { data, error } = await supabase
     .from('categories')
-    // @ts-expect-error - Supabase client type inference issue
     .insert({
       household_id: householdId,
       name: name.trim(),
@@ -80,7 +79,6 @@ export async function updateCategory(id: string, name: string, color: string): P
 
   const { error } = await supabase
     .from('categories')
-    // @ts-expect-error - Supabase client type inference issue
     .update({
       name: name.trim(),
       color

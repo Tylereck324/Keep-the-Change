@@ -58,7 +58,6 @@ export async function setBudgetAmount(categoryId: string, month: string, amount:
 
   const { error } = await supabase
     .from('monthly_budgets')
-    // @ts-expect-error - Supabase client type inference issue
     .upsert(
       {
         household_id: householdId,
@@ -119,7 +118,6 @@ export async function copyBudgetFromPreviousMonth(currentMonth: string): Promise
 
   const { error } = await supabase
     .from('monthly_budgets')
-    // @ts-expect-error - Supabase client type inference issue
     .upsert(newBudgets, { onConflict: 'household_id,category_id,month' })
 
   if (error) throw new Error(error.message)
