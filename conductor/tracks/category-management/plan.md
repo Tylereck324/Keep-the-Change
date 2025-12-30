@@ -36,3 +36,7 @@ Users needed the ability to delete categories that were no longer relevant. The 
     - [x] **Senior Dev Optimization Fixes**:
         - [x] Fixed Regression: Restored "Archive" capability to Budget Page by creating `BudgetCategoryRow`.
         - [x] Refactored `Dashboard` to use shared `CategoryCard` instead of code duplication.
+    - [x] **Senior Dev Optimization Fixes (Restore)**:
+        - [x] Added `restoreCategory` server action.
+        - [x] Added "Show Archived" toggle to Budget Page.
+        - [x] Implemented "Restore" button in UI.

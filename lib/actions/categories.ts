@@ -27,16 +27,21 @@ function validateColor(color: string): void {
   }
 }
 
-export async function getCategories(): Promise<Category[]> {
+export async function getCategories(includeArchived = false): Promise<Category[]> {
   const householdId = await getSession()
   if (!householdId) throw new Error('Not authenticated')
 
-  const { data, error } = await supabase
+  let query = supabase
     .from('categories')
     .select('*')
     .eq('household_id', householdId)
-    .is('deleted_at', null)
     .order('name')
+
+  if (!includeArchived) {
+    query = query.is('deleted_at', null)
+  }
+
+  const { data, error } = await query
 
   if (error) throw new Error(`Failed to fetch categories: ${error.message}`)
   return data || []
@@ -128,7 +133,21 @@ export async function deleteCategory(id: string): Promise<void> {
     .eq('id', id)
     .eq('household_id', householdId)
 
-  if (error) throw new Error(`Failed to delete category: ${error.message}`)
+  revalidatePath('/', 'layout')
+}
+
+export async function restoreCategory(id: string): Promise<void> {
+  const householdId = await getSession()
+  if (!householdId) throw new Error('Not authenticated')
+
+  const { error } = await supabase
+    .from('categories')
+    // @ts-expect-error - Supabase client type inference issue with new column
+    .update({ deleted_at: null })
+    .eq('id', id)
+    .eq('household_id', householdId)
+
+  if (error) throw new Error(`Failed to restore category: ${error.message}`)
 
   revalidatePath('/', 'layout')
 }

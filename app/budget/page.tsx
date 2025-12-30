@@ -13,17 +13,23 @@ function getCurrentMonth() {
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
 }
 
-export default async function BudgetPage() {
+export default async function BudgetPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
+}) {
   const session = await getSession()
   if (!session) redirect('/')
 
+  const params = await searchParams
+  const showArchived = params.show_archived === 'true'
   const currentMonth = getCurrentMonth()
 
   // Auto-rollover budget from previous month if enabled and needed
   await autoRolloverIfNeeded(currentMonth)
 
   const [categories, budgets] = await Promise.all([
-    getCategories(),
+    getCategories(showArchived),
     getMonthlyBudgets(currentMonth),
   ])
 
@@ -48,6 +54,11 @@ export default async function BudgetPage() {
           </p>
         </div>
         <div className="flex gap-2">
+          <Link href={showArchived ? '/budget' : '/budget?show_archived=true'}>
+            <Button variant="ghost">
+              {showArchived ? 'Hide Archived' : 'Show Archived'}
+            </Button>
+          </Link>
           <form action={handleCopyFromPrevious}>
             <Button variant="outline" type="submit">
               Copy Last Month
