@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   Dialog,
   DialogContent,
@@ -17,6 +17,7 @@ interface InlineCategoryCreateProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   onCategoryCreated: (category: Category) => void
+  suggestedName?: string
 }
 
 const PRESET_COLORS = [
@@ -34,11 +35,19 @@ export function InlineCategoryCreate({
   open,
   onOpenChange,
   onCategoryCreated,
+  suggestedName,
 }: InlineCategoryCreateProps) {
   const [name, setName] = useState('')
   const [color, setColor] = useState(PRESET_COLORS[0])
   const [isCreating, setIsCreating] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  // Pre-fill name with suggestion when dialog opens
+  useEffect(() => {
+    if (open && suggestedName) {
+      setName(suggestedName)
+    }
+  }, [open, suggestedName])
 
   const handleCreate = async () => {
     if (!name.trim()) {

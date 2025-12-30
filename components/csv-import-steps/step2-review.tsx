@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/select'
 import { InlineCategoryCreate } from '@/components/inline-category-create'
 import { matchCategory, type MatchType } from '@/lib/utils/category-matcher'
+import { suggestCategoryName } from '@/lib/utils/category-name-suggester'
 import type { ParsedTransaction } from '@/lib/utils/csv-parser'
 import type { Category, CategoryKeyword, MerchantPattern } from '@/lib/types'
 
@@ -167,6 +168,11 @@ export function Step2Review({
 
   const allCategorized = reviewedTransactions.every((txn) => txn.categoryId)
   const hasSelections = selectedRows.size > 0
+
+  // Generate suggested name for category creation
+  const suggestedName = pendingCategoryIndex !== null
+    ? suggestCategoryName(reviewedTransactions[pendingCategoryIndex].description)
+    : undefined
 
   return (
     <div className="space-y-6">
@@ -344,6 +350,7 @@ export function Step2Review({
         open={showCreateDialog}
         onOpenChange={setShowCreateDialog}
         onCategoryCreated={handleCategoryCreated}
+        suggestedName={suggestedName}
       />
     </div>
   )
