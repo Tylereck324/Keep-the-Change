@@ -1,5 +1,6 @@
 'use client'
 
+import { memo, useMemo } from 'react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import type { MerchantInsight } from '@/lib/actions/insights'
@@ -8,18 +9,19 @@ interface MerchantChartProps {
   data: MerchantInsight[]
 }
 
-export function MerchantChart({ data }: MerchantChartProps) {
-  const chartData = data.map(m => ({
+export const MerchantChart = memo(function MerchantChart({ data }: MerchantChartProps) {
+  // Memoize chart data transformation
+  const chartData = useMemo(() => data.map(m => ({
     name: m.displayName.length > 15 ? m.displayName.slice(0, 15) + '...' : m.displayName,
     fullName: m.displayName,
     amount: m.totalSpent,
     count: m.transactionCount,
-  }))
+  })), [data])
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-gray-900 dark:text-gray-100">Top 10 Merchants</CardTitle>
+        <CardTitle className="text-foreground">Top 10 Merchants</CardTitle>
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={350}>
@@ -28,28 +30,28 @@ export function MerchantChart({ data }: MerchantChartProps) {
             layout="vertical"
             margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
           >
-            <CartesianGrid strokeDasharray="3 3" stroke="#374151" horizontal={false} />
+            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" horizontal={false} />
             <XAxis
               type="number"
               className="text-xs"
-              tick={{ fill: '#9ca3af' }}
+              tick={{ fill: 'hsl(var(--foreground))' }}
               tickFormatter={(value) => `$${value}`}
-              stroke="#374151"
+              stroke="hsl(var(--border))"
             />
             <YAxis
               type="category"
               dataKey="name"
               width={120}
               className="text-xs"
-              tick={{ fill: '#9ca3af' }}
-              stroke="#374151"
+              tick={{ fill: 'hsl(var(--foreground))' }}
+              stroke="hsl(var(--border))"
             />
             <Tooltip
               contentStyle={{
-                backgroundColor: '#1f2937',
-                border: '1px solid #374151',
+                backgroundColor: 'hsl(var(--popover))',
+                border: '1px solid hsl(var(--border))',
                 borderRadius: '8px',
-                color: '#f3f4f6',
+                color: 'hsl(var(--popover-foreground))',
               }}
               formatter={(value: number | undefined) => value !== undefined ? [`$${value.toFixed(2)}`, 'Total Spent'] : ['$0.00', 'Total Spent']}
               labelFormatter={(label, payload) => {
@@ -69,4 +71,4 @@ export function MerchantChart({ data }: MerchantChartProps) {
       </CardContent>
     </Card>
   )
-}
+})

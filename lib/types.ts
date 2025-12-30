@@ -6,18 +6,21 @@ export type Database = {
           id: string
           name: string
           pin_hash: string
+          auto_rollover_budget: boolean
           created_at: string
         }
         Insert: {
           id?: string
           name: string
           pin_hash: string
+          auto_rollover_budget?: boolean
           created_at?: string
         }
         Update: {
           id?: string
           name?: string
           pin_hash?: string
+          auto_rollover_budget?: boolean
           created_at?: string
         }
       }

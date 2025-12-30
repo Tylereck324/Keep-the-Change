@@ -7,8 +7,8 @@ type HouseholdRow = Database['public']['Tables']['households']['Row']
 
 // Rate limiting: track failed attempts in memory (resets on server restart)
 const failedAttempts = new Map<string, { count: number; lastAttempt: number }>()
-const MAX_ATTEMPTS = 5
-const LOCKOUT_DURATION = 60 * 1000 // 1 minute
+const MAX_ATTEMPTS = 3
+const LOCKOUT_DURATION = 5 * 60 * 1000 // 5 minutes
 
 export async function POST(request: NextRequest) {
   try {

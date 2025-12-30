@@ -1,5 +1,6 @@
 'use client'
 
+import { memo, useMemo } from 'react'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
@@ -7,11 +8,12 @@ interface SpendingTimelineChartProps {
   data: Array<{ date: string; amount: number }>
 }
 
-export function SpendingTimelineChart({ data }: SpendingTimelineChartProps) {
-  const formattedData = data.map((item) => ({
+export const SpendingTimelineChart = memo(function SpendingTimelineChart({ data }: SpendingTimelineChartProps) {
+  // Memoize data formatting to prevent recalculation on every render
+  const formattedData = useMemo(() => data.map((item) => ({
     date: new Date(item.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
     amount: item.amount,
-  }))
+  })), [data])
 
   return (
     <Card>
@@ -55,4 +57,4 @@ export function SpendingTimelineChart({ data }: SpendingTimelineChartProps) {
       </CardContent>
     </Card>
   )
-}
+})

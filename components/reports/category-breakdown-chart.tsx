@@ -1,5 +1,6 @@
 'use client'
 
+import { memo } from 'react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
@@ -12,7 +13,7 @@ interface CategoryBreakdownChartProps {
   }>
 }
 
-export function CategoryBreakdownChart({ data }: CategoryBreakdownChartProps) {
+export const CategoryBreakdownChart = memo(function CategoryBreakdownChart({ data }: CategoryBreakdownChartProps) {
   return (
     <Card>
       <CardHeader>
@@ -51,4 +52,4 @@ export function CategoryBreakdownChart({ data }: CategoryBreakdownChartProps) {
       </CardContent>
     </Card>
   )
-}
+})

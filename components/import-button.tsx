@@ -1,9 +1,19 @@
 'use client'
 
 import { useState } from 'react'
+import dynamic from 'next/dynamic'
 import { Button } from '@/components/ui/button'
-import { CSVImportWizard } from '@/components/csv-import-wizard'
+import { Skeleton } from '@/components/ui/skeleton'
 import type { Category, CategoryKeyword, MerchantPattern, Transaction } from '@/lib/types'
+
+// Lazy load CSV import wizard - only loads when user clicks Import button
+const CSVImportWizard = dynamic(
+  () => import('@/components/csv-import-wizard').then((mod) => ({ default: mod.CSVImportWizard })),
+  {
+    loading: () => <Skeleton className="h-96 w-full" />,
+    ssr: false,
+  }
+)
 
 interface ImportButtonProps {
   categories: Category[]

@@ -134,24 +134,46 @@ export async function getMultiMonthTrend(months: string[]): Promise<TrendData[]>
   const householdId = await getSession()
   if (!householdId) throw new Error('Not authenticated')
 
-  const data = await Promise.all(
-    months.map(async (month) => {
-      const [budgets, allTransactions] = await Promise.all([
-        getMonthlyBudgets(month),
-        getTransactions({ startDate: `${month}-01`, endDate: `${month}-31` }),
-      ])
+  if (months.length === 0) return []
 
-      // Filter out income
-      const isIncome = (t: typeof allTransactions[0]) =>
-        (t as { type?: string }).type === 'income' || t.category?.name?.toLowerCase() === 'income'
-      const expenses = allTransactions.filter(t => !isIncome(t))
+  // Sort months to get date range
+  const sortedMonths = [...months].sort()
+  const startMonth = sortedMonths[0]
+  const endMonth = sortedMonths[sortedMonths.length - 1]
 
-      const budgeted = budgets.reduce((sum, b) => sum + b.budgeted_amount, 0)
-      const spent = expenses.reduce((sum, t) => sum + t.amount, 0)
+  // Fetch all data in bulk with single queries
+  const [allBudgets, allTransactions] = await Promise.all([
+    getMonthlyBudgets(startMonth, endMonth),
+    getTransactions({
+      startDate: `${startMonth}-01`,
+      endDate: `${endMonth}-31`
+    }),
+  ])
 
-      return { month, spent, budgeted }
-    })
-  )
+  // Filter out income
+  const isIncome = (t: typeof allTransactions[0]) =>
+    (t as { type?: string }).type === 'income' || t.category?.name?.toLowerCase() === 'income'
+  const expenses = allTransactions.filter(t => !isIncome(t))
+
+  // Group budgets by month
+  const budgetsByMonth = new Map<string, number>()
+  allBudgets.forEach((b) => {
+    budgetsByMonth.set(b.month, (budgetsByMonth.get(b.month) || 0) + b.budgeted_amount)
+  })
+
+  // Group expenses by month (extract YYYY-MM from date)
+  const expensesByMonth = new Map<string, number>()
+  expenses.forEach((t) => {
+    const month = t.date.slice(0, 7) // Extract YYYY-MM
+    expensesByMonth.set(month, (expensesByMonth.get(month) || 0) + t.amount)
+  })
+
+  // Build result for each requested month
+  const data = months.map((month) => ({
+    month,
+    spent: expensesByMonth.get(month) || 0,
+    budgeted: budgetsByMonth.get(month) || 0,
+  }))
 
   return data.sort((a, b) => a.month.localeCompare(b.month))
 }
@@ -213,27 +235,40 @@ export async function getYearSummary(year: number): Promise<{
     `${year}-${String(i + 1).padStart(2, '0')}`
   )
 
-  const [categories, monthlyData] = await Promise.all([
+  // Fetch all data for the year in bulk (2 queries instead of 24+)
+  const [categories, yearBudgets, yearTransactions] = await Promise.all([
     getCategories(),
-    Promise.all(
-      months.map(async (month) => {
-        const [budgets, allTransactions] = await Promise.all([
-          getMonthlyBudgets(month),
-          getTransactions({ startDate: `${month}-01`, endDate: `${month}-31` }),
-        ])
-
-        // Filter out income
-        const isIncome = (t: typeof allTransactions[0]) =>
-          (t as { type?: string }).type === 'income' || t.category?.name?.toLowerCase() === 'income'
-        const expenses = allTransactions.filter(t => !isIncome(t))
-
-        const budgeted = budgets.reduce((sum, b) => sum + b.budgeted_amount, 0)
-        const spent = expenses.reduce((sum, t) => sum + t.amount, 0)
-
-        return { month, budgeted, spent, transactions: expenses }
-      })
-    ),
+    getMonthlyBudgets(`${year}-01`, `${year}-12`),
+    getTransactions({
+      startDate: `${year}-01-01`,
+      endDate: `${year}-12-31`
+    }),
   ])
+
+  // Filter out income
+  const isIncome = (t: typeof yearTransactions[0]) =>
+    (t as { type?: string }).type === 'income' || t.category?.name?.toLowerCase() === 'income'
+  const expenses = yearTransactions.filter(t => !isIncome(t))
+
+  // Group budgets by month
+  const budgetsByMonth = new Map<string, number>()
+  yearBudgets.forEach((b) => {
+    budgetsByMonth.set(b.month, (budgetsByMonth.get(b.month) || 0) + b.budgeted_amount)
+  })
+
+  // Group expenses by month
+  const expensesByMonth = new Map<string, number>()
+  expenses.forEach((t) => {
+    const month = t.date.slice(0, 7) // Extract YYYY-MM
+    expensesByMonth.set(month, (expensesByMonth.get(month) || 0) + t.amount)
+  })
+
+  // Build monthly data
+  const monthlyData = months.map((month) => ({
+    month,
+    budgeted: budgetsByMonth.get(month) || 0,
+    spent: expensesByMonth.get(month) || 0,
+  }))
 
   const totalBudgeted = monthlyData.reduce((sum, m) => sum + m.budgeted, 0)
   const totalSpent = monthlyData.reduce((sum, m) => sum + m.spent, 0)
@@ -250,14 +285,12 @@ export async function getYearSummary(year: number): Promise<{
       ? monthsWithSpending.reduce((min, m) => (m.spent < min.spent ? m : min))
       : { month: months[0], spent: 0 }
 
-  // Calculate category totals (already filtered to expenses only)
+  // Calculate category totals from all expenses
   const categoryTotals = new Map<string, number>()
-  monthlyData.forEach((m) => {
-    m.transactions.forEach((t) => {
-      if (t.category_id) {
-        categoryTotals.set(t.category_id, (categoryTotals.get(t.category_id) || 0) + t.amount)
-      }
-    })
+  expenses.forEach((t) => {
+    if (t.category_id) {
+      categoryTotals.set(t.category_id, (categoryTotals.get(t.category_id) || 0) + t.amount)
+    }
   })
 
   const categoryTotalsArray = categories

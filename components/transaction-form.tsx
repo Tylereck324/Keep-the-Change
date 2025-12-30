@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -206,9 +206,12 @@ export function TransactionForm({ categories, transaction, trigger, onSuccess, b
     setWarningDismissed(false)
   }
 
-  const suggestions = showWarning && budgetMap && spentMap
-    ? getSortedCategorySuggestions(categories, budgetMap, spentMap, categoryId)
-    : []
+  // Memoize expensive suggestion calculation
+  const suggestions = useMemo(() => {
+    return showWarning && budgetMap && spentMap
+      ? getSortedCategorySuggestions(categories, budgetMap, spentMap, categoryId)
+      : []
+  }, [showWarning, budgetMap, spentMap, categories, categoryId])
 
   return (
     <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) resetForm(); }}>

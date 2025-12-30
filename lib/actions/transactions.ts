@@ -65,6 +65,8 @@ export async function getTransactions(filters?: {
   startDate?: string
   endDate?: string
   type?: 'income' | 'expense'
+  limit?: number
+  offset?: number
 }): Promise<TransactionWithCategory[]> {
   const householdId = await getSession()
   if (!householdId) return []
@@ -95,6 +97,12 @@ export async function getTransactions(filters?: {
   }
   if (filters?.type) {
     query = query.eq('type', filters.type)
+  }
+  if (filters?.limit) {
+    query = query.limit(filters.limit)
+  }
+  if (filters?.offset) {
+    query = query.range(filters.offset, filters.offset + (filters.limit || 50) - 1)
   }
 
   const { data, error } = await query

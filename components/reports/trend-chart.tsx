@@ -1,5 +1,6 @@
 'use client'
 
+import { memo, useMemo } from 'react'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
@@ -11,12 +12,13 @@ interface TrendChartProps {
   }>
 }
 
-export function TrendChart({ data }: TrendChartProps) {
-  const formattedData = data.map((item) => ({
+export const TrendChart = memo(function TrendChart({ data }: TrendChartProps) {
+  // Memoize data formatting to prevent recalculation on every render
+  const formattedData = useMemo(() => data.map((item) => ({
     month: new Date(item.month + '-01').toLocaleDateString('en-US', { month: 'short', year: '2-digit' }),
     spent: item.spent,
     budgeted: item.budgeted,
-  }))
+  })), [data])
 
   return (
     <Card>
@@ -69,4 +71,4 @@ export function TrendChart({ data }: TrendChartProps) {
       </CardContent>
     </Card>
   )
-}
+})

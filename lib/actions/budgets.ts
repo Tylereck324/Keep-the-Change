@@ -19,16 +19,26 @@ function validateMonth(month: string): void {
   }
 }
 
-export async function getMonthlyBudgets(month: string): Promise<MonthlyBudget[]> {
+export async function getMonthlyBudgets(month: string, endMonth?: string): Promise<MonthlyBudget[]> {
   validateMonth(month)
+  if (endMonth) validateMonth(endMonth)
+
   const householdId = await getSession()
   if (!householdId) return []
 
-  const { data, error } = await supabase
+  let query = supabase
     .from('monthly_budgets')
     .select('*')
     .eq('household_id', householdId)
-    .eq('month', month)
+
+  // If endMonth provided, fetch range, otherwise fetch single month
+  if (endMonth) {
+    query = query.gte('month', month).lte('month', endMonth)
+  } else {
+    query = query.eq('month', month)
+  }
+
+  const { data, error } = await query
 
   if (error) {
     throw new Error(`Failed to fetch monthly budgets: ${error.message}`)
