@@ -1,10 +1,12 @@
 import { getSession } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { getCategories } from '@/lib/actions/categories'
+import { getAllKeywords } from '@/lib/actions/keywords'
 import { CategoryForm } from '@/components/category-form'
 import { ChangePinForm } from '@/components/change-pin-form'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { AutoRolloverToggle } from '@/components/auto-rollover-toggle'
+import { KeywordManagement } from '@/components/keyword-management'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
@@ -13,7 +15,10 @@ export default async function SettingsPage() {
   const session = await getSession()
   if (!session) redirect('/')
 
-  const categories = await getCategories()
+  const [categories, keywordsByCategory] = await Promise.all([
+    getCategories(),
+    getAllKeywords(),
+  ])
 
   return (
     <main className="container mx-auto p-4 max-w-2xl">
@@ -55,7 +60,7 @@ export default async function SettingsPage() {
       </Card>
 
       {/* Manage Categories */}
-      <Card>
+      <Card className="mb-6">
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Manage Categories</CardTitle>
           <CategoryForm trigger={<Button size="sm">+ Add</Button>} />
@@ -85,6 +90,25 @@ export default async function SettingsPage() {
               ))}
             </div>
           )}
+        </CardContent>
+      </Card>
+
+      {/* Import Settings */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Import Settings</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="mb-4">
+            <p className="text-sm text-muted-foreground">
+              Configure keywords to automatically categorize transactions when importing CSV files.
+              Keywords are matched against transaction descriptions to suggest categories.
+            </p>
+          </div>
+          <KeywordManagement
+            categories={categories}
+            keywordsByCategory={keywordsByCategory}
+          />
         </CardContent>
       </Card>
     </main>
