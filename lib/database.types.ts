@@ -270,7 +270,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      bulk_import_transactions: {
+        Args: { p_household_id: string; p_transactions: Json }
+        Returns: Json
+      }
     }
     Enums: {
       [_ in never]: never

@@ -107,11 +107,8 @@ export async function bulkImportTransactions(
   }
 
   // Call atomic RPC function
-  // Note: After running add_bulk_import_function.sql migration, regenerate types
-  // to remove this eslint-disable and type cast
   try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data, error } = await (supabase.rpc as any)('bulk_import_transactions', {
+    const { data, error } = await supabase.rpc('bulk_import_transactions', {
       p_household_id: householdId,
       p_transactions: validTransactions,
     })
