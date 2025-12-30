@@ -14,4 +14,11 @@ Users needed the ability to delete categories that were no longer relevant. The 
     - [x] Add client-side confirmation dialog to prevent accidental deletion.
 - [x] **Verification & Polish**
     - [x] Verify database behavior: Ensure transactions linked to a deleted category are set to NULL (uncategorized) or similar, rather than causing foreign key errors. (Verified via schema: `on delete set null`)
-    - [x] Add visual feedback (toast notification) upon successful deletion (currently uses `alert` on error, silent success with revalidation). (Implemented using `sonner`)
+    - [x] Add visual feedback (toast notification) upon successful deletion.
+    - [x] **Code Review Fixes**:
+        - [x] Replace `window.confirm` with `AlertDialog`.
+        - [x] Fix accessibility (aria-labels on color picker).
+        - [x] Extract colors to constants.
+        - [x] Centralize delete logic in `CategoryForm` and `DeleteCategoryDialog`.
+        - [x] Improve `revalidatePath` specificity to ensure `/budget` and `/transactions` update.
+        - [x] Verified that uncategorized transactions do not disappear from "Total Spent" (they are included in the sum, just not in category breakdowns).

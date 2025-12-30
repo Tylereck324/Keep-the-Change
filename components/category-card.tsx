@@ -8,6 +8,7 @@ import { CategoryForm } from './category-form'
 import { deleteCategory } from '@/lib/actions/categories'
 import { Category, MonthlyBudget } from '@/lib/types'
 import { toast } from 'sonner'
+import { DeleteCategoryDialog } from './delete-category-dialog'
 
 interface CategoryCardProps {
   category: Category
@@ -29,8 +30,6 @@ export function CategoryCard({ category, budget, spent }: CategoryCardProps) {
   }
 
   const handleDelete = async () => {
-    if (!confirm('Delete this category? Transactions will be uncategorized.')) return
-
     setDeleting(true)
     try {
       await deleteCategory(category.id)
@@ -57,15 +56,21 @@ export function CategoryCard({ category, budget, spent }: CategoryCardProps) {
             <CategoryForm
               category={category}
               trigger={<Button variant="ghost" size="sm">Edit</Button>}
+              onDelete={handleDelete}
             />
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleDelete}
-              disabled={deleting}
-            >
-              Delete
-            </Button>
+            <DeleteCategoryDialog
+              trigger={
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  disabled={deleting}
+                >
+                  Delete
+                </Button>
+              }
+              onConfirm={handleDelete}
+              loading={deleting}
+            />
           </div>
         </div>
       </CardHeader>

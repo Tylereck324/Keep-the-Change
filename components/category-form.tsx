@@ -12,27 +12,27 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog'
 import { toast } from 'sonner'
-import { createCategory, updateCategory, deleteCategory } from '@/lib/actions/categories'
+import { createCategory, updateCategory } from '@/lib/actions/categories'
 
-const COLORS = [
-  '#ef4444', '#f97316', '#eab308', '#22c55e', '#14b8a6',
-  '#3b82f6', '#6366f1', '#a855f7', '#ec4899', '#64748b',
-]
+import { CATEGORY_COLORS } from '@/lib/constants'
+import { DeleteCategoryDialog } from './delete-category-dialog'
 
 interface CategoryFormProps {
   category?: { id: string; name: string; color: string }
   trigger: React.ReactNode
   onSuccess?: () => void
+  onDelete?: () => void
 }
 
-export function CategoryForm({ category, trigger, onSuccess }: CategoryFormProps) {
+export function CategoryForm({ category, trigger, onSuccess, onDelete }: CategoryFormProps) {
   const [open, setOpen] = useState(false)
   const [name, setName] = useState(category?.name ?? '')
-  const [color, setColor] = useState(category?.color ?? COLORS[0])
+  const [color, setColor] = useState(category?.color ?? CATEGORY_COLORS[0])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
   const isEditing = !!category
+  // ... rest of the file
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -56,7 +56,7 @@ export function CategoryForm({ category, trigger, onSuccess }: CategoryFormProps
       setOpen(false)
       if (!isEditing) {
         setName('')
-        setColor(COLORS[0])
+        setColor(CATEGORY_COLORS[0])
       }
       onSuccess?.()
     } catch (err) {
@@ -92,10 +92,11 @@ export function CategoryForm({ category, trigger, onSuccess }: CategoryFormProps
           <div className="space-y-2">
             <Label>Color</Label>
             <div className="flex gap-2 flex-wrap">
-              {COLORS.map((c) => (
+              {CATEGORY_COLORS.map((c) => (
                 <button
                   key={c}
                   type="button"
+                  aria-label={`Select color ${c}`}
                   className={`w-8 h-8 rounded-full border-2 ${
                     color === c ? 'border-foreground' : 'border-transparent'
                   }`}
@@ -110,29 +111,20 @@ export function CategoryForm({ category, trigger, onSuccess }: CategoryFormProps
             <Button type="submit" className="flex-1" disabled={loading}>
               {loading ? 'Saving...' : isEditing ? 'Save Changes' : 'Create Category'}
             </Button>
-            {isEditing && (
-              <Button
-                type="button"
-                variant="destructive"
-                onClick={async () => {
-                  if (!confirm('Are you sure you want to delete this category?')) return
-                  setLoading(true)
-                  try {
-                    await deleteCategory(category.id)
-                    toast.success('Category deleted')
-                    setOpen(false)
-                    onSuccess?.()
-                  } catch (err) {
-                    const message = err instanceof Error ? err.message : 'Failed to delete'
-                    setError(message)
-                    toast.error(message)
-                    setLoading(false)
-                  }
-                }}
-                disabled={loading}
-              >
-                Delete
-              </Button>
+            {isEditing && onDelete && (
+              <DeleteCategoryDialog
+                trigger={
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    disabled={loading}
+                  >
+                    Delete
+                  </Button>
+                }
+                onConfirm={onDelete}
+                loading={loading}
+              />
             )}
           </div>
         </form>
