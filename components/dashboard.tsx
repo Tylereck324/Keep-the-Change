@@ -29,8 +29,9 @@ export async function Dashboard() {
   const budgetMap = new Map(budgets.map((b) => [b.category_id, b.budgeted_amount]))
 
   // Separate income and expenses (check type OR category name)
+  // Use optional chaining for type in case migration hasn't run yet
   const isIncome = (t: typeof transactions[0]) =>
-    t.type === 'income' || t.category?.name?.toLowerCase() === 'income'
+    (t as { type?: string }).type === 'income' || t.category?.name?.toLowerCase() === 'income'
 
   const incomeTransactions = transactions.filter(isIncome)
   const expenseTransactions = transactions.filter((t) => !isIncome(t))

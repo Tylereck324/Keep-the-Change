@@ -46,8 +46,9 @@ export async function getMonthlyReport(month: string): Promise<MonthlyReport> {
   ])
 
   // Separate income and expenses (check type OR category name)
+  // Use optional chaining for type in case migration hasn't run yet
   const isIncome = (t: typeof allTransactions[0]) =>
-    t.type === 'income' || t.category?.name?.toLowerCase() === 'income'
+    (t as { type?: string }).type === 'income' || t.category?.name?.toLowerCase() === 'income'
 
   const incomeTransactions = allTransactions.filter(isIncome)
   const expenseTransactions = allTransactions.filter(t => !isIncome(t))

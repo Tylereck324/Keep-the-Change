@@ -76,7 +76,7 @@ export async function getMerchantInsights(): Promise<MerchantInsight[]> {
   const { startDate, endDate } = getLastNMonthsRange(6)
   const allTransactions = await getTransactions({ startDate, endDate })
   const isIncome = (t: typeof allTransactions[0]) =>
-    t.type === 'income' || t.category?.name?.toLowerCase() === 'income'
+    (t as { type?: string }).type === 'income' || t.category?.name?.toLowerCase() === 'income'
   const transactions = allTransactions.filter(t => !isIncome(t))
 
   // Group by normalized merchant name
@@ -156,7 +156,7 @@ export async function getRecurringCharges(): Promise<RecurringCharge[]> {
   const { startDate, endDate } = getLastNMonthsRange(6)
   const allTransactions = await getTransactions({ startDate, endDate })
   const isIncome = (t: typeof allTransactions[0]) =>
-    t.type === 'income' || t.category?.name?.toLowerCase() === 'income'
+    (t as { type?: string }).type === 'income' || t.category?.name?.toLowerCase() === 'income'
   const transactions = allTransactions.filter(t => !isIncome(t))
 
   // Group by normalized merchant name

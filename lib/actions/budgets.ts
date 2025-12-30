@@ -188,7 +188,7 @@ export async function getBudgetDataForWarnings(): Promise<{
   transactions
     .filter((t): t is typeof t & { category_id: string } =>
       t.category_id != null &&
-      t.type !== 'income' &&
+      (t as { type?: string }).type !== 'income' &&
       t.category?.name?.toLowerCase() !== 'income'
     )
     .forEach((t) => {
