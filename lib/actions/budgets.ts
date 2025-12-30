@@ -5,19 +5,7 @@ import { supabase } from '@/lib/supabase'
 import { getSession } from '@/lib/auth'
 import { getAutoRolloverSetting } from '@/lib/actions/settings'
 import { MonthlyBudget } from '@/lib/types'
-
-function validateMonth(month: string): void {
-  const monthRegex = /^\d{4}-\d{2}$/
-  if (!monthRegex.test(month)) {
-    throw new Error('Invalid month format. Expected YYYY-MM')
-  }
-  const [yearStr, monthStr] = month.split('-')
-  const year = parseInt(yearStr, 10)
-  const parsedMonth = parseInt(monthStr, 10)
-  if (isNaN(year) || isNaN(parsedMonth) || parsedMonth < 1 || parsedMonth > 12) {
-    throw new Error('Invalid month format. Expected YYYY-MM')
-  }
-}
+import { validateMonth } from '@/lib/utils/validators'
 
 export async function getMonthlyBudgets(month: string, endMonth?: string): Promise<MonthlyBudget[]> {
   validateMonth(month)

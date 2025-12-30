@@ -3,29 +3,8 @@
 import { revalidatePath } from 'next/cache'
 import { supabase } from '@/lib/supabase'
 import { getSession } from '@/lib/auth'
-import type { Category, Database } from '@/lib/types'
-
-/**
- * Validates that a category name is valid
- */
-function validateName(name: string): void {
-  if (!name || name.trim().length === 0) {
-    throw new Error('Category name cannot be empty')
-  }
-  if (name.length > 100) {
-    throw new Error('Category name must be 100 characters or less')
-  }
-}
-
-/**
- * Validates that a color is a valid hex color format
- */
-function validateColor(color: string): void {
-  const hexColorRegex = /^#[0-9A-Fa-f]{6}$/
-  if (!hexColorRegex.test(color)) {
-    throw new Error('Color must be a valid hex color format (e.g., #FF5733)')
-  }
-}
+import type { Category } from '@/lib/types'
+import { validateName, validateColor } from '@/lib/utils/validators'
 
 export async function getCategories(): Promise<Category[]> {
   const householdId = await getSession()
