@@ -5,7 +5,6 @@ import { supabase } from '@/lib/supabase'
 import { getSession } from '@/lib/auth'
 import type { Database } from '@/lib/types'
 
-type TransactionInsert = Database['public']['Tables']['transactions']['Insert']
 type MerchantPatternInsert = Database['public']['Tables']['merchant_patterns']['Insert']
 
 export type BulkImportTransaction = {
@@ -23,13 +22,13 @@ export type BulkImportResult = {
 }
 
 /**
- * Bulk import transactions with batch processing.
- * Processes transactions in batches of 100 to avoid timeouts.
+ * Bulk import transactions atomically using Postgres RPC.
+ * The entire import is wrapped in a database transaction - either all
+ * transactions are imported successfully, or none are (full rollback).
  * 
- * WARNING: This operation is NOT atomic. If a later batch fails,
- * earlier batches that succeeded will still be committed. Consider
- * implementing a Postgres RPC function with transaction handling for
- * truly atomic imports in the future.
+ * Validation is performed client-side first to provide better error messages.
+ * If validation passes, transactions are sent to the bulk_import_transactions
+ * Postgres function which handles the atomic insert.
  */
 export async function bulkImportTransactions(
   transactions: BulkImportTransaction[]
@@ -39,103 +38,129 @@ export async function bulkImportTransactions(
     throw new Error('Not authenticated')
   }
 
-  const BATCH_SIZE = 100
   const errors: Array<{ index: number; message: string }> = []
-  let imported = 0
+  const validTransactions: Array<{
+    category_id: string
+    amount: number
+    description: string
+    date: string
+    type: string
+  }> = []
 
-  // Process transactions in batches
-  for (let i = 0; i < transactions.length; i += BATCH_SIZE) {
-    const batch = transactions.slice(i, i + BATCH_SIZE)
+  // Client-side validation first
+  for (let i = 0; i < transactions.length; i++) {
+    const txn = transactions[i]
 
-    // Convert to database format
-    const insertData: TransactionInsert[] = []
-
-    for (let batchIndex = 0; batchIndex < batch.length; batchIndex++) {
-      const txn = batch[batchIndex]
-      const globalIndex = i + batchIndex
-
-      // Validate required fields
-      if (!txn.categoryId || txn.categoryId.trim() === '') {
-        errors.push({ index: globalIndex, message: 'Category is required' })
-        continue
-      }
-      if (!Number.isFinite(txn.amount) || txn.amount <= 0) {
-        errors.push({ index: globalIndex, message: 'Invalid amount' })
-        continue
-      }
-      if (txn.amount > 100_000_000) {
-        errors.push({ index: globalIndex, message: 'Amount exceeds maximum allowed value' })
-        continue
-      }
-      if (!txn.date || !/^\d{4}-\d{2}-\d{2}$/.test(txn.date)) {
-        errors.push({ index: globalIndex, message: 'Invalid date format' })
-        continue
-      }
-      if (!txn.description || txn.description.trim() === '') {
-        errors.push({ index: globalIndex, message: 'Description is required' })
-        continue
-      }
-      if (txn.description.length > 100) {
-        errors.push({ index: globalIndex, message: 'Description must be 100 characters or less' })
-        continue
-      }
-
-      insertData.push({
-        household_id: householdId,
-        category_id: txn.categoryId,
-        amount: txn.amount,
-        description: txn.description,
-        date: txn.date,
-      })
+    // Validate required fields
+    if (!txn.categoryId || txn.categoryId.trim() === '') {
+      errors.push({ index: i, message: 'Category is required' })
+      continue
     }
-
-    // Skip if all transactions in batch failed validation
-    if (insertData.length === 0) {
+    if (!Number.isFinite(txn.amount) || txn.amount <= 0) {
+      errors.push({ index: i, message: 'Invalid amount' })
+      continue
+    }
+    if (txn.amount > 100_000_000) {
+      errors.push({ index: i, message: 'Amount exceeds maximum allowed value' })
+      continue
+    }
+    if (!txn.date || !/^\d{4}-\d{2}-\d{2}$/.test(txn.date)) {
+      errors.push({ index: i, message: 'Invalid date format' })
+      continue
+    }
+    if (!txn.description || txn.description.trim() === '') {
+      errors.push({ index: i, message: 'Description is required' })
+      continue
+    }
+    if (txn.description.length > 100) {
+      errors.push({ index: i, message: 'Description must be 100 characters or less' })
       continue
     }
 
-    // Insert batch
-    try {
-      const { error } = await supabase
-        .from('transactions')
-        .insert(insertData)
+    validTransactions.push({
+      category_id: txn.categoryId,
+      amount: txn.amount,
+      description: txn.description,
+      date: txn.date,
+      type: 'expense',
+    })
+  }
 
-      if (error) {
-        // If batch insert fails, mark all transactions in this batch as failed
-        for (let j = 0; j < insertData.length; j++) {
-          const globalIndex = i + j
-          errors.push({
-            index: globalIndex,
-            message: `Batch insert failed: ${error.message}`,
-          })
-        }
-      } else {
-        imported += insertData.length
-      }
-    } catch (error) {
-      // If batch insert fails, mark all transactions in this batch as failed
-      for (let j = 0; j < insertData.length; j++) {
-        const globalIndex = i + j
-        errors.push({
-          index: globalIndex,
-          message: error instanceof Error ? error.message : 'Unknown error',
-        })
-      }
+  // If there are validation errors, don't proceed with import
+  if (errors.length > 0) {
+    return {
+      success: false,
+      imported: 0,
+      failed: errors.length,
+      errors,
     }
   }
 
-  // Revalidate paths after import
-  revalidatePath('/')
-  revalidatePath('/transactions')
+  // If no valid transactions, return early
+  if (validTransactions.length === 0) {
+    return {
+      success: true,
+      imported: 0,
+      failed: 0,
+      errors: [],
+    }
+  }
 
-  const failed = errors.length
-  const success = imported > 0 && failed === 0
+  // Call atomic RPC function
+  // Note: After running add_bulk_import_function.sql migration, regenerate types
+  // to remove this eslint-disable and type cast
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data, error } = await (supabase.rpc as any)('bulk_import_transactions', {
+      p_household_id: householdId,
+      p_transactions: validTransactions,
+    })
 
-  return {
-    success,
-    imported,
-    failed,
-    errors,
+    if (error) {
+      // RPC call failed
+      return {
+        success: false,
+        imported: 0,
+        failed: validTransactions.length,
+        errors: [{ index: 0, message: `Import failed: ${error.message}` }],
+      }
+    }
+
+    // Parse RPC response
+    const result = data as {
+      success: boolean
+      imported: number
+      failed: number
+      errors?: Array<{ index: number; message: string }>
+      error?: string
+    }
+
+    if (!result.success) {
+      return {
+        success: false,
+        imported: 0,
+        failed: validTransactions.length,
+        errors: result.errors || [{ index: 0, message: result.error || 'Unknown error' }],
+      }
+    }
+
+    // Revalidate paths after successful import
+    revalidatePath('/')
+    revalidatePath('/transactions')
+
+    return {
+      success: true,
+      imported: result.imported,
+      failed: 0,
+      errors: [],
+    }
+  } catch (error) {
+    return {
+      success: false,
+      imported: 0,
+      failed: validTransactions.length,
+      errors: [{ index: 0, message: error instanceof Error ? error.message : 'Unknown error' }],
+    }
   }
 }
 
