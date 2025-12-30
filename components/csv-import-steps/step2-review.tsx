@@ -111,8 +111,9 @@ export function Step2Review({
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
+      // Only select currently filtered transactions
       const allIndices = new Set(
-        reviewedTransactions.map((_, i) => i)
+        filteredTransactions.map(({ index }) => index)
       )
       setSelectedRows(allIndices)
     } else {
@@ -305,7 +306,10 @@ export function Step2Review({
               <tr>
                 <th className="p-2 text-left">
                   <Checkbox
-                    checked={selectedRows.size === reviewedTransactions.length}
+                    checked={
+                      filteredTransactions.length > 0 &&
+                      filteredTransactions.every(({ index }) => selectedRows.has(index))
+                    }
                     onCheckedChange={handleSelectAll}
                   />
                 </th>
