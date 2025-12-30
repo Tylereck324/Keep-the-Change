@@ -19,8 +19,10 @@ export interface CategoryReport {
 export interface MonthlyReport {
   month: string
   totalBudgeted: number
+  totalIncome: number
   totalSpent: number
   totalRemaining: number
+  netCashFlow: number
   savingsRate: number
   categories: CategoryReport[]
   transactionsByDay: { date: string; amount: number }[]
@@ -37,20 +39,24 @@ export async function getMonthlyReport(month: string): Promise<MonthlyReport> {
   const householdId = await getSession()
   if (!householdId) throw new Error('Not authenticated')
 
-  const [categories, budgets, transactions] = await Promise.all([
+  const [categories, budgets, allTransactions] = await Promise.all([
     getCategories(),
     getMonthlyBudgets(month),
     getTransactions({ startDate: `${month}-01`, endDate: `${month}-31` }),
   ])
 
+  // Separate income and expenses
+  const incomeTransactions = allTransactions.filter(t => t.type === 'income')
+  const expenseTransactions = allTransactions.filter(t => t.type !== 'income')
+
   const budgetMap = new Map(budgets.map((b) => [b.category_id, b.budgeted_amount]))
   const categoryMap = new Map(categories.map((c) => [c.id, c]))
 
-  // Calculate spending by category
+  // Calculate spending by category (expenses only)
   const categorySpending = new Map<string, number>()
   const categoryTransactionCount = new Map<string, number>()
 
-  transactions.forEach((t) => {
+  expenseTransactions.forEach((t) => {
     if (t.category_id) {
       categorySpending.set(t.category_id, (categorySpending.get(t.category_id) || 0) + t.amount)
       categoryTransactionCount.set(t.category_id, (categoryTransactionCount.get(t.category_id) || 0) + 1)
@@ -76,9 +82,9 @@ export async function getMonthlyReport(month: string): Promise<MonthlyReport> {
     }
   })
 
-  // Calculate daily spending
+  // Calculate daily spending (expenses only)
   const dailySpending = new Map<string, number>()
-  transactions.forEach((t) => {
+  expenseTransactions.forEach((t) => {
     const date = t.date
     dailySpending.set(date, (dailySpending.get(date) || 0) + t.amount)
   })
@@ -87,8 +93,8 @@ export async function getMonthlyReport(month: string): Promise<MonthlyReport> {
     .map(([date, amount]) => ({ date, amount }))
     .sort((a, b) => a.date.localeCompare(b.date))
 
-  // Top transactions
-  const topTransactions = transactions
+  // Top transactions (expenses only)
+  const topTransactions = expenseTransactions
     .sort((a, b) => b.amount - a.amount)
     .slice(0, 10)
     .map((t) => ({
@@ -100,15 +106,19 @@ export async function getMonthlyReport(month: string): Promise<MonthlyReport> {
     }))
 
   const totalBudgeted = budgets.reduce((sum, b) => sum + b.budgeted_amount, 0)
-  const totalSpent = transactions.reduce((sum, t) => sum + t.amount, 0)
+  const totalIncome = incomeTransactions.reduce((sum, t) => sum + t.amount, 0)
+  const totalSpent = expenseTransactions.reduce((sum, t) => sum + t.amount, 0)
   const totalRemaining = totalBudgeted - totalSpent
-  const savingsRate = totalBudgeted > 0 ? (totalRemaining / totalBudgeted) * 100 : 0
+  const netCashFlow = totalIncome - totalSpent
+  const savingsRate = totalIncome > 0 ? (netCashFlow / totalIncome) * 100 : 0
 
   return {
     month,
     totalBudgeted,
+    totalIncome,
     totalSpent,
     totalRemaining,
+    netCashFlow,
     savingsRate,
     categories: categoryReports,
     transactionsByDay,

@@ -48,28 +48,31 @@ export type Database = {
         Row: {
           id: string
           household_id: string
-          category_id: string
+          category_id: string | null
           amount: number
           description: string | null
           date: string
+          type: 'income' | 'expense'
           created_at: string
         }
         Insert: {
           id?: string
           household_id: string
-          category_id: string
+          category_id?: string | null
           amount: number
           description?: string | null
           date: string
+          type?: 'income' | 'expense'
           created_at?: string
         }
         Update: {
           id?: string
           household_id?: string
-          category_id?: string
+          category_id?: string | null
           amount?: number
           description?: string | null
           date?: string
+          type?: 'income' | 'expense'
           created_at?: string
         }
       }

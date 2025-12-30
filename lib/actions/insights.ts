@@ -72,9 +72,10 @@ export async function getMerchantInsights(): Promise<MerchantInsight[]> {
   const householdId = await getSession()
   if (!householdId) throw new Error('Not authenticated')
 
-  // Get last 6 months of transactions
+  // Get last 6 months of expense transactions only
   const { startDate, endDate } = getLastNMonthsRange(6)
-  const transactions = await getTransactions({ startDate, endDate })
+  const allTransactions = await getTransactions({ startDate, endDate })
+  const transactions = allTransactions.filter(t => t.type !== 'income')
 
   // Group by normalized merchant name
   const merchantGroups = new Map<string, TransactionWithCategory[]>()
@@ -149,9 +150,10 @@ export async function getRecurringCharges(): Promise<RecurringCharge[]> {
   const householdId = await getSession()
   if (!householdId) throw new Error('Not authenticated')
 
-  // Get last 6 months of transactions
+  // Get last 6 months of expense transactions only
   const { startDate, endDate } = getLastNMonthsRange(6)
-  const transactions = await getTransactions({ startDate, endDate })
+  const allTransactions = await getTransactions({ startDate, endDate })
+  const transactions = allTransactions.filter(t => t.type !== 'income')
 
   // Group by normalized merchant name
   const merchantGroups = new Map<string, TransactionWithCategory[]>()

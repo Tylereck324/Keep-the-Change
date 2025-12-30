@@ -38,6 +38,9 @@ interface TransactionFormProps {
 
 export function TransactionForm({ categories, transaction, trigger, onSuccess, budgetMap, spentMap }: TransactionFormProps) {
   const [open, setOpen] = useState(false)
+  const [transactionType, setTransactionType] = useState<'income' | 'expense'>(
+    transaction?.type ?? 'expense'
+  )
   const [amount, setAmount] = useState(transaction?.amount?.toString() ?? '')
   const [categoryId, setCategoryId] = useState(transaction?.category_id ?? '')
   const [description, setDescription] = useState(transaction?.description ?? '')
@@ -56,16 +59,17 @@ export function TransactionForm({ categories, transaction, trigger, onSuccess, b
   const [warningDismissed, setWarningDismissed] = useState(false)
 
   const isEditing = !!transaction
+  const isIncome = transactionType === 'income'
 
   // Reset warning dismissed flag when category changes
   useEffect(() => {
     setWarningDismissed(false)
   }, [categoryId])
 
-  // Check for budget warnings when amount or category changes
+  // Check for budget warnings when amount or category changes (expenses only)
   useEffect(() => {
-    // Only check warnings if budgetMap and spentMap are provided
-    if (!budgetMap || !spentMap) {
+    // Only check warnings for expenses with budgetMap and spentMap
+    if (isIncome || !budgetMap || !spentMap) {
       setShowWarning(false)
       setWarningData(null)
       return
@@ -114,7 +118,7 @@ export function TransactionForm({ categories, transaction, trigger, onSuccess, b
       setShowWarning(false)
       setWarningData(null)
     }
-  }, [amount, categoryId, budgetMap, spentMap, categories, warningDismissed])
+  }, [amount, categoryId, budgetMap, spentMap, categories, warningDismissed, isIncome])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -126,7 +130,8 @@ export function TransactionForm({ categories, transaction, trigger, onSuccess, b
       return
     }
 
-    if (!categoryId) {
+    // Category required for expenses only
+    if (!isIncome && !categoryId) {
       setError('Please select a category')
       return
     }
@@ -136,17 +141,19 @@ export function TransactionForm({ categories, transaction, trigger, onSuccess, b
     try {
       if (isEditing) {
         await updateTransaction(transaction.id, {
-          categoryId,
+          categoryId: isIncome ? undefined : categoryId,
           amount: numAmount,
           description: description.trim() || undefined,
           date,
+          type: transactionType,
         })
       } else {
         await createTransaction({
-          categoryId,
+          categoryId: isIncome ? undefined : categoryId,
           amount: numAmount,
           description: description.trim() || undefined,
           date,
+          type: transactionType,
         })
       }
       setOpen(false)
@@ -186,6 +193,7 @@ export function TransactionForm({ categories, transaction, trigger, onSuccess, b
   }
 
   const resetForm = () => {
+    setTransactionType('expense')
     setAmount('')
     setCategoryId('')
     setDescription('')
@@ -213,6 +221,32 @@ export function TransactionForm({ categories, transaction, trigger, onSuccess, b
         <form onSubmit={handleSubmit} className="space-y-4">
           {error && <p className="text-sm text-destructive">{error}</p>}
 
+          {/* Transaction Type Toggle */}
+          <div className="flex rounded-lg border p-1 gap-1">
+            <button
+              type="button"
+              onClick={() => setTransactionType('expense')}
+              className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+                !isIncome
+                  ? 'bg-primary text-primary-foreground'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              Expense
+            </button>
+            <button
+              type="button"
+              onClick={() => setTransactionType('income')}
+              className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+                isIncome
+                  ? 'bg-green-600 text-white'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              Income
+            </button>
+          </div>
+
           <div className="space-y-2">
             <Label htmlFor="amount">Amount</Label>
             <div className="flex items-center gap-1">
@@ -230,53 +264,56 @@ export function TransactionForm({ categories, transaction, trigger, onSuccess, b
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label>Category</Label>
-            {showNewCategory ? (
-              <div className="flex gap-2">
-                <Input
-                  value={newCategoryName}
-                  onChange={(e) => setNewCategoryName(e.target.value)}
-                  placeholder="Category name"
-                />
-                <Button type="button" onClick={handleCreateCategory} disabled={loading}>
-                  Add
-                </Button>
-                <Button type="button" variant="ghost" onClick={() => setShowNewCategory(false)}>
-                  Cancel
-                </Button>
-              </div>
-            ) : (
-              <Select value={categoryId} onValueChange={setCategoryId}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select category" />
-                </SelectTrigger>
-                <SelectContent>
-                  {categories.map((cat) => (
-                    <SelectItem key={cat.id} value={cat.id}>
-                      <div className="flex items-center gap-2">
-                        <div
-                          className="w-2 h-2 rounded-full"
-                          style={{ backgroundColor: cat.color }}
-                        />
-                        {cat.name}
-                      </div>
-                    </SelectItem>
-                  ))}
-                  <button
-                    type="button"
-                    className="w-full px-2 py-1.5 text-sm text-left hover:bg-accent rounded"
-                    onClick={() => setShowNewCategory(true)}
-                  >
-                    + New Category
-                  </button>
-                </SelectContent>
-              </Select>
-            )}
-          </div>
+          {/* Category - only for expenses */}
+          {!isIncome && (
+            <div className="space-y-2">
+              <Label>Category</Label>
+              {showNewCategory ? (
+                <div className="flex gap-2">
+                  <Input
+                    value={newCategoryName}
+                    onChange={(e) => setNewCategoryName(e.target.value)}
+                    placeholder="Category name"
+                  />
+                  <Button type="button" onClick={handleCreateCategory} disabled={loading}>
+                    Add
+                  </Button>
+                  <Button type="button" variant="ghost" onClick={() => setShowNewCategory(false)}>
+                    Cancel
+                  </Button>
+                </div>
+              ) : (
+                <Select value={categoryId} onValueChange={setCategoryId}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map((cat) => (
+                      <SelectItem key={cat.id} value={cat.id}>
+                        <div className="flex items-center gap-2">
+                          <div
+                            className="w-2 h-2 rounded-full"
+                            style={{ backgroundColor: cat.color }}
+                          />
+                          {cat.name}
+                        </div>
+                      </SelectItem>
+                    ))}
+                    <button
+                      type="button"
+                      className="w-full px-2 py-1.5 text-sm text-left hover:bg-accent rounded"
+                      onClick={() => setShowNewCategory(true)}
+                    >
+                      + New Category
+                    </button>
+                  </SelectContent>
+                </Select>
+              )}
+            </div>
+          )}
 
-          {/* Budget Warning */}
-          {showWarning && warningData && (
+          {/* Budget Warning - only for expenses */}
+          {!isIncome && showWarning && warningData && (
             <BudgetWarning
               categoryName={warningData.categoryName}
               overage={warningData.overage}

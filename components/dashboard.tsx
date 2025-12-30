@@ -28,9 +28,13 @@ export async function Dashboard() {
 
   const budgetMap = new Map(budgets.map((b) => [b.category_id, b.budgeted_amount]))
 
-  // Calculate spent per category
+  // Separate income and expenses
+  const incomeTransactions = transactions.filter((t) => t.type === 'income')
+  const expenseTransactions = transactions.filter((t) => t.type !== 'income')
+
+  // Calculate spent per category (expenses only)
   const spentByCategory = new Map<string, number>()
-  transactions.forEach((t) => {
+  expenseTransactions.forEach((t) => {
     if (t.category_id) {
       spentByCategory.set(
         t.category_id,
@@ -40,8 +44,9 @@ export async function Dashboard() {
   })
 
   const totalBudgeted = budgets.reduce((sum, b) => sum + b.budgeted_amount, 0)
-  const totalSpent = transactions.reduce((sum, t) => sum + t.amount, 0)
-  const totalRemaining = totalBudgeted - totalSpent
+  const totalIncome = incomeTransactions.reduce((sum, t) => sum + t.amount, 0)
+  const totalExpenses = expenseTransactions.reduce((sum, t) => sum + t.amount, 0)
+  const netCashFlow = totalIncome - totalExpenses
 
   const monthName = new Date(currentMonth + '-01').toLocaleDateString('en-US', {
     month: 'long',
@@ -65,31 +70,57 @@ export async function Dashboard() {
       <div className="grid grid-cols-3 gap-4 mb-6">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-muted-foreground">Budgeted</CardTitle>
+            <CardTitle className="text-sm text-muted-foreground">Income</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold">${totalBudgeted.toFixed(2)}</p>
+            <p className="text-2xl font-bold text-green-600">${totalIncome.toFixed(2)}</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-muted-foreground">Spent</CardTitle>
+            <CardTitle className="text-sm text-muted-foreground">Expenses</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold">${totalSpent.toFixed(2)}</p>
+            <p className="text-2xl font-bold">${totalExpenses.toFixed(2)}</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-muted-foreground">Remaining</CardTitle>
+            <CardTitle className="text-sm text-muted-foreground">Net</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className={`text-2xl font-bold ${totalRemaining < 0 ? 'text-red-500' : ''}`}>
-              ${totalRemaining.toFixed(2)}
+            <p className={`text-2xl font-bold ${netCashFlow < 0 ? 'text-red-500' : 'text-green-600'}`}>
+              {netCashFlow >= 0 ? '+' : ''}${netCashFlow.toFixed(2)}
             </p>
           </CardContent>
         </Card>
       </div>
+
+      {/* Budget Progress */}
+      {totalBudgeted > 0 && (
+        <Card className="mb-6">
+          <CardContent className="py-3">
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-sm font-medium">Budget Progress</span>
+              <span className="text-sm text-muted-foreground">
+                ${totalExpenses.toFixed(2)} / ${totalBudgeted.toFixed(2)}
+              </span>
+            </div>
+            <Progress
+              value={Math.min((totalExpenses / totalBudgeted) * 100, 100)}
+              className="h-2"
+              style={{
+                ['--progress-color' as string]:
+                  totalExpenses > totalBudgeted ? '#ef4444' :
+                  totalExpenses > totalBudgeted * 0.75 ? '#eab308' : '#22c55e'
+              }}
+            />
+            <p className={`text-xs mt-1 ${totalBudgeted - totalExpenses < 0 ? 'text-red-500' : 'text-muted-foreground'}`}>
+              ${Math.abs(totalBudgeted - totalExpenses).toFixed(2)} {totalBudgeted - totalExpenses >= 0 ? 'remaining' : 'over budget'}
+            </p>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Recent Activity */}
       <div className="mb-6">

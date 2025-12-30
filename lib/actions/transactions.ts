@@ -64,6 +64,7 @@ export async function getTransactions(filters?: {
   categoryId?: string
   startDate?: string
   endDate?: string
+  type?: 'income' | 'expense'
 }): Promise<TransactionWithCategory[]> {
   const householdId = await getSession()
   if (!householdId) return []
@@ -91,6 +92,9 @@ export async function getTransactions(filters?: {
   }
   if (filters?.endDate) {
     query = query.lte('date', filters.endDate)
+  }
+  if (filters?.type) {
+    query = query.eq('type', filters.type)
   }
 
   const { data, error } = await query
@@ -130,17 +134,20 @@ export async function getTransactionsByMonth(month: string): Promise<Transaction
 }
 
 export async function createTransaction(data: {
-  categoryId: string
+  categoryId?: string
   amount: number
   description?: string
   date: string
+  type?: 'income' | 'expense'
 }): Promise<void> {
   const householdId = await getSession()
   if (!householdId) throw new Error('Not authenticated')
 
-  // Validate all inputs
-  if (!data.categoryId || data.categoryId.trim() === '') {
-    throw new Error('Category is required')
+  const transactionType = data.type || 'expense'
+
+  // Validate all inputs - category required for expenses only
+  if (transactionType === 'expense' && (!data.categoryId || data.categoryId.trim() === '')) {
+    throw new Error('Category is required for expenses')
   }
   validateAmount(data.amount)
   validateDate(data.date)
@@ -151,10 +158,11 @@ export async function createTransaction(data: {
     // @ts-expect-error - Supabase client type inference issue
     .insert({
     household_id: householdId,
-    category_id: data.categoryId,
+    category_id: data.categoryId || null,
     amount: data.amount,
     description: data.description || null,
     date: data.date,
+    type: transactionType,
   })
 
   if (error) {
@@ -163,15 +171,17 @@ export async function createTransaction(data: {
 
   revalidatePath('/')
   revalidatePath('/transactions')
+  revalidatePath('/insights')
 }
 
 export async function updateTransaction(
   id: string,
   data: {
-    categoryId: string
+    categoryId?: string
     amount: number
     description?: string
     date: string
+    type?: 'income' | 'expense'
   }
 ): Promise<void> {
   const householdId = await getSession()
@@ -182,9 +192,11 @@ export async function updateTransaction(
     throw new Error('Transaction ID is required')
   }
 
-  // Validate all inputs
-  if (!data.categoryId || data.categoryId.trim() === '') {
-    throw new Error('Category is required')
+  const transactionType = data.type || 'expense'
+
+  // Validate all inputs - category required for expenses only
+  if (transactionType === 'expense' && (!data.categoryId || data.categoryId.trim() === '')) {
+    throw new Error('Category is required for expenses')
   }
   validateAmount(data.amount)
   validateDate(data.date)
@@ -194,10 +206,11 @@ export async function updateTransaction(
     .from('transactions')
     // @ts-expect-error - Supabase client type inference issue
     .update({
-      category_id: data.categoryId,
+      category_id: data.categoryId || null,
       amount: data.amount,
       description: data.description || null,
       date: data.date,
+      type: transactionType,
     })
     .eq('id', id)
     .eq('household_id', householdId)
@@ -208,6 +221,7 @@ export async function updateTransaction(
 
   revalidatePath('/')
   revalidatePath('/transactions')
+  revalidatePath('/insights')
 }
 
 export async function deleteTransaction(id: string): Promise<void> {
