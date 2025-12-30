@@ -30,29 +30,33 @@ export const MerchantChart = memo(function MerchantChart({ data }: MerchantChart
             layout="vertical"
             margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
           >
-            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" horizontal={false} />
+            <CartesianGrid strokeDasharray="3 3" strokeOpacity={0.3} horizontal={false} />
             <XAxis
               type="number"
-              className="text-xs"
-              tick={{ fill: 'hsl(var(--foreground))' }}
+              tick={{ fill: 'currentColor', className: 'text-foreground' }}
               tickFormatter={(value) => `$${value}`}
-              stroke="hsl(var(--border))"
+              stroke="currentColor"
+              strokeOpacity={0.3}
+              style={{ fontSize: '12px' }}
             />
             <YAxis
               type="category"
               dataKey="name"
               width={120}
-              className="text-xs"
-              tick={{ fill: 'hsl(var(--foreground))' }}
-              stroke="hsl(var(--border))"
+              tick={{ fill: 'currentColor', className: 'text-foreground' }}
+              stroke="currentColor"
+              strokeOpacity={0.3}
+              style={{ fontSize: '12px' }}
             />
             <Tooltip
               contentStyle={{
-                backgroundColor: 'hsl(var(--popover))',
-                border: '1px solid hsl(var(--border))',
+                backgroundColor: 'var(--card)',
+                border: '1px solid var(--border)',
                 borderRadius: '8px',
-                color: 'hsl(var(--popover-foreground))',
+                color: 'var(--card-foreground)',
               }}
+              labelStyle={{ color: 'var(--card-foreground)' }}
+              itemStyle={{ color: 'var(--card-foreground)' }}
               formatter={(value: number | undefined) => value !== undefined ? [`$${value.toFixed(2)}`, 'Total Spent'] : ['$0.00', 'Total Spent']}
               labelFormatter={(label, payload) => {
                 if (payload && payload[0]) {

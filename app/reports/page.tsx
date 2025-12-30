@@ -7,21 +7,7 @@ import { SpendingTimelineChart } from '@/components/reports/spending-timeline-ch
 import { CategoryBreakdownChart } from '@/components/reports/category-breakdown-chart'
 import { TrendChart } from '@/components/reports/trend-chart'
 import Link from 'next/link'
-
-function getCurrentMonth() {
-  const now = new Date()
-  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
-}
-
-function getLastNMonths(n: number): string[] {
-  const months: string[] = []
-  const now = new Date()
-  for (let i = n - 1; i >= 0; i--) {
-    const date = new Date(now.getFullYear(), now.getMonth() - i, 1)
-    months.push(`${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`)
-  }
-  return months
-}
+import { getCurrentMonth, getLastNMonths } from '@/lib/utils/date'
 
 export default async function ReportsPage() {
   const session = await getSession()
@@ -29,7 +15,8 @@ export default async function ReportsPage() {
 
   const currentMonth = getCurrentMonth()
   const currentYear = new Date().getFullYear()
-  const last6Months = getLastNMonths(6)
+  // getLastNMonths returns months in reverse order (most recent first), so we reverse for chronological order
+  const last6Months = getLastNMonths(6).reverse()
 
   const [monthlyReport, trendData, forecast, yearSummary] = await Promise.all([
     getMonthlyReport(currentMonth),

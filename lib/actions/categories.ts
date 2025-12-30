@@ -49,6 +49,18 @@ export async function createCategory(name: string, color: string): Promise<Categ
   validateName(name)
   validateColor(color)
 
+  // Check for duplicate category name (case-insensitive)
+  const { data: existing } = await supabase
+    .from('categories')
+    .select('id')
+    .eq('household_id', householdId)
+    .ilike('name', name.trim())
+    .maybeSingle()
+
+  if (existing) {
+    throw new Error('A category with this name already exists')
+  }
+
   const { data, error } = await supabase
     .from('categories')
     // @ts-expect-error - Supabase client type inference issue
@@ -73,6 +85,19 @@ export async function updateCategory(id: string, name: string, color: string): P
   // Validate inputs
   validateName(name)
   validateColor(color)
+
+  // Check for duplicate category name (case-insensitive), excluding current category
+  const { data: existing } = await supabase
+    .from('categories')
+    .select('id')
+    .eq('household_id', householdId)
+    .ilike('name', name.trim())
+    .neq('id', id)
+    .maybeSingle()
+
+  if (existing) {
+    throw new Error('A category with this name already exists')
+  }
 
   const { error } = await supabase
     .from('categories')

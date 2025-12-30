@@ -158,3 +158,12 @@ export type Transaction = Database['public']['Tables']['transactions']['Row']
 export type MonthlyBudget = Database['public']['Tables']['monthly_budgets']['Row']
 export type CategoryKeyword = Database['public']['Tables']['category_keywords']['Row']
 export type MerchantPattern = Database['public']['Tables']['merchant_patterns']['Row']
+
+/**
+ * Standardized return type for server actions.
+ * Provides consistent success/error handling across the application.
+ */
+export type ActionResult<T> =
+  | { success: true; data: T }
+  | { success: false; error: string; code?: string }
+

@@ -2,6 +2,7 @@
 
 import { getSession } from '@/lib/auth'
 import { getTransactions, TransactionWithCategory } from './transactions'
+import { isIncomeTransaction } from '@/lib/utils/transaction-helpers'
 
 export interface MerchantInsight {
   merchant: string
@@ -75,9 +76,7 @@ export async function getMerchantInsights(): Promise<MerchantInsight[]> {
   // Get last 6 months of expense transactions only (exclude income type and income category)
   const { startDate, endDate } = getLastNMonthsRange(6)
   const allTransactions = await getTransactions({ startDate, endDate })
-  const isIncome = (t: typeof allTransactions[0]) =>
-    (t as { type?: string }).type === 'income' || t.category?.name?.toLowerCase() === 'income'
-  const transactions = allTransactions.filter(t => !isIncome(t))
+  const transactions = allTransactions.filter(t => !isIncomeTransaction(t))
 
   // Group by normalized merchant name
   const merchantGroups = new Map<string, TransactionWithCategory[]>()
@@ -155,9 +154,7 @@ export async function getRecurringCharges(): Promise<RecurringCharge[]> {
   // Get last 6 months of expense transactions only (exclude income type and income category)
   const { startDate, endDate } = getLastNMonthsRange(6)
   const allTransactions = await getTransactions({ startDate, endDate })
-  const isIncome = (t: typeof allTransactions[0]) =>
-    (t as { type?: string }).type === 'income' || t.category?.name?.toLowerCase() === 'income'
-  const transactions = allTransactions.filter(t => !isIncome(t))
+  const transactions = allTransactions.filter(t => !isIncomeTransaction(t))
 
   // Group by normalized merchant name
   const merchantGroups = new Map<string, TransactionWithCategory[]>()

@@ -8,11 +8,8 @@ import { Progress } from '@/components/ui/progress'
 import { TransactionForm } from './transaction-form'
 import { RecentTransactions } from './recent-transactions'
 import { CategoryForm } from './category-form'
-
-function getCurrentMonth() {
-  const now = new Date()
-  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
-}
+import { getCurrentMonth } from '@/lib/utils/date'
+import { isIncomeTransaction } from '@/lib/utils/transaction-helpers'
 
 export async function Dashboard() {
   const currentMonth = getCurrentMonth()
@@ -28,13 +25,9 @@ export async function Dashboard() {
 
   const budgetMap = new Map(budgets.map((b) => [b.category_id, b.budgeted_amount]))
 
-  // Separate income and expenses (check type OR category name)
-  // Use optional chaining for type in case migration hasn't run yet
-  const isIncome = (t: typeof transactions[0]) =>
-    (t as { type?: string }).type === 'income' || t.category?.name?.toLowerCase() === 'income'
-
-  const incomeTransactions = transactions.filter(isIncome)
-  const expenseTransactions = transactions.filter((t) => !isIncome(t))
+  // Separate income and expenses
+  const incomeTransactions = transactions.filter(isIncomeTransaction)
+  const expenseTransactions = transactions.filter((t) => !isIncomeTransaction(t))
 
   // Calculate spent per category (expenses only)
   const spentByCategory = new Map<string, number>()

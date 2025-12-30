@@ -4,52 +4,12 @@ import { revalidatePath } from 'next/cache'
 import { supabase } from '@/lib/supabase'
 import { getSession } from '@/lib/auth'
 import { Transaction } from '@/lib/types'
-
-// Validation helpers
-function validateMonth(month: string): void {
-  const monthRegex = /^\d{4}-\d{2}$/
-  if (!monthRegex.test(month)) {
-    throw new Error('Invalid month format. Expected YYYY-MM')
-  }
-  const [yearStr, monthStr] = month.split('-')
-  const year = parseInt(yearStr, 10)
-  const parsedMonth = parseInt(monthStr, 10)
-  if (isNaN(year) || isNaN(parsedMonth) || parsedMonth < 1 || parsedMonth > 12) {
-    throw new Error('Invalid month format. Expected YYYY-MM')
-  }
-}
-
-function validateDate(dateStr: string): void {
-  const dateRegex = /^\d{4}-\d{2}-\d{2}$/
-  if (!dateRegex.test(dateStr)) {
-    throw new Error('Invalid date format. Expected YYYY-MM-DD')
-  }
-  const date = new Date(dateStr)
-  if (isNaN(date.getTime())) {
-    throw new Error('Invalid date value')
-  }
-  if (date > new Date()) {
-    throw new Error('Date cannot be in the future')
-  }
-}
-
-function validateAmount(amount: number): void {
-  if (!Number.isFinite(amount)) {
-    throw new Error('Amount must be a valid number')
-  }
-  if (amount <= 0) {
-    throw new Error('Amount must be positive')
-  }
-  if (amount > 100_000_000) {
-    throw new Error('Amount exceeds maximum allowed value')
-  }
-}
-
-function validateDescription(description: string | undefined): void {
-  if (description && description.length > 100) {
-    throw new Error('Description must be 100 characters or less')
-  }
-}
+import {
+  validateAmount,
+  validateDate,
+  validateDescription,
+  validateMonth,
+} from '@/lib/utils/validators'
 
 // Transaction with joined category data
 export type TransactionWithCategory = Transaction & {
@@ -165,13 +125,13 @@ export async function createTransaction(data: {
     .from('transactions')
     // @ts-expect-error - Supabase client type inference issue
     .insert({
-    household_id: householdId,
-    category_id: data.categoryId || null,
-    amount: data.amount,
-    description: data.description || null,
-    date: data.date,
-    type: transactionType,
-  })
+      household_id: householdId,
+      category_id: data.categoryId || null,
+      amount: data.amount,
+      description: data.description || null,
+      date: data.date,
+      type: transactionType,
+    })
 
   if (error) {
     throw new Error(`Failed to create transaction: ${error.message}`)

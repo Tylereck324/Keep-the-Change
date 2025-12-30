@@ -4,6 +4,7 @@ import { getSession } from '@/lib/auth'
 import { getTransactions } from './transactions'
 import { getCategories } from './categories'
 import { getMonthlyBudgets } from './budgets'
+import { isIncomeTransaction } from '@/lib/utils/transaction-helpers'
 
 export interface CategoryReport {
   categoryId: string
@@ -45,13 +46,9 @@ export async function getMonthlyReport(month: string): Promise<MonthlyReport> {
     getTransactions({ startDate: `${month}-01`, endDate: `${month}-31` }),
   ])
 
-  // Separate income and expenses (check type OR category name)
-  // Use optional chaining for type in case migration hasn't run yet
-  const isIncome = (t: typeof allTransactions[0]) =>
-    (t as { type?: string }).type === 'income' || t.category?.name?.toLowerCase() === 'income'
-
-  const incomeTransactions = allTransactions.filter(isIncome)
-  const expenseTransactions = allTransactions.filter(t => !isIncome(t))
+  // Separate income and expenses
+  const incomeTransactions = allTransactions.filter(isIncomeTransaction)
+  const expenseTransactions = allTransactions.filter(t => !isIncomeTransaction(t))
 
   const budgetMap = new Map(budgets.map((b) => [b.category_id, b.budgeted_amount]))
   const categoryMap = new Map(categories.map((c) => [c.id, c]))
@@ -151,9 +148,7 @@ export async function getMultiMonthTrend(months: string[]): Promise<TrendData[]>
   ])
 
   // Filter out income
-  const isIncome = (t: typeof allTransactions[0]) =>
-    (t as { type?: string }).type === 'income' || t.category?.name?.toLowerCase() === 'income'
-  const expenses = allTransactions.filter(t => !isIncome(t))
+  const expenses = allTransactions.filter(t => !isIncomeTransaction(t))
 
   // Group budgets by month
   const budgetsByMonth = new Map<string, number>()
@@ -193,9 +188,7 @@ export async function getForecast(currentMonth: string): Promise<{
   ])
 
   // Filter out income
-  const isIncome = (t: typeof allTransactions[0]) =>
-    (t as { type?: string }).type === 'income' || t.category?.name?.toLowerCase() === 'income'
-  const expenses = allTransactions.filter(t => !isIncome(t))
+  const expenses = allTransactions.filter(t => !isIncomeTransaction(t))
 
   const totalBudgeted = budgets.reduce((sum, b) => sum + b.budgeted_amount, 0)
   const totalSpent = expenses.reduce((sum, t) => sum + t.amount, 0)
@@ -246,9 +239,7 @@ export async function getYearSummary(year: number): Promise<{
   ])
 
   // Filter out income
-  const isIncome = (t: typeof yearTransactions[0]) =>
-    (t as { type?: string }).type === 'income' || t.category?.name?.toLowerCase() === 'income'
-  const expenses = yearTransactions.filter(t => !isIncome(t))
+  const expenses = yearTransactions.filter(t => !isIncomeTransaction(t))
 
   // Group budgets by month
   const budgetsByMonth = new Map<string, number>()

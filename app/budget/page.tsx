@@ -8,11 +8,7 @@ import { BudgetAmountInput } from '@/components/budget-amount-input'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import Link from 'next/link'
-
-function getCurrentMonth() {
-  const now = new Date()
-  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
-}
+import { getCurrentMonth } from '@/lib/utils/date'
 
 export default async function BudgetPage() {
   const session = await getSession()
