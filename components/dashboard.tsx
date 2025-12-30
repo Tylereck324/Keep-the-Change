@@ -77,7 +77,7 @@ export async function Dashboard() {
             <CardTitle className="text-sm text-muted-foreground">Income</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold text-green-600">${totalIncome.toFixed(2)}</p>
+            <p className="text-2xl font-bold text-green-600 dark:text-green-400">${totalIncome.toFixed(2)}</p>
           </CardContent>
         </Card>
         <Card>
@@ -93,7 +93,7 @@ export async function Dashboard() {
             <CardTitle className="text-sm text-muted-foreground">Net</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className={`text-2xl font-bold ${netCashFlow < 0 ? 'text-red-500' : 'text-green-600'}`}>
+            <p className={`text-2xl font-bold ${netCashFlow < 0 ? 'text-red-500' : 'text-green-600 dark:text-green-400'}`}>
               {netCashFlow >= 0 ? '+' : ''}${netCashFlow.toFixed(2)}
             </p>
           </CardContent>

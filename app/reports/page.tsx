@@ -112,7 +112,7 @@ export default async function ReportsPage() {
             </div>
             <div className="flex justify-between border-t pt-2">
               <span className="text-muted-foreground">Projected Over/Under Budget:</span>
-              <span className={`font-bold ${forecast.projectedOverUnder < 0 ? 'text-red-500' : 'text-green-500'}`}>
+              <span className={`font-bold ${forecast.projectedOverUnder < 0 ? 'text-red-500' : 'text-green-500 dark:text-green-400'}`}>
                 {forecast.projectedOverUnder < 0 ? '-' : '+'}${Math.abs(forecast.projectedOverUnder).toFixed(2)}
               </span>
             </div>
@@ -122,7 +122,7 @@ export default async function ReportsPage() {
               </p>
             )}
             {forecast.projectedOverUnder > 0 && (
-              <p className="text-sm text-green-600 mt-2">
+              <p className="text-sm text-green-600 dark:text-green-400 mt-2">
                 ✓ On track to save ${forecast.projectedOverUnder.toFixed(2)} this month!
               </p>
             )}
@@ -230,7 +230,7 @@ export default async function ReportsPage() {
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Total Saved (YTD)</p>
-              <p className={`text-2xl font-bold ${yearSummary.totalSaved < 0 ? 'text-red-500' : 'text-green-500'}`}>
+              <p className={`text-2xl font-bold ${yearSummary.totalSaved < 0 ? 'text-red-500' : 'text-green-500 dark:text-green-400'}`}>
                 ${yearSummary.totalSaved.toFixed(2)}
               </p>
             </div>

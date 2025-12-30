@@ -22,9 +22,9 @@ export function CategoryCard({ category, budget, spent }: CategoryCardProps) {
   const percentUsed = budgeted > 0 ? Math.min((spent / budgeted) * 100, 100) : 0
 
   const getProgressColor = () => {
-    if (percentUsed >= 100) return 'bg-red-500'
-    if (percentUsed >= 75) return 'bg-yellow-500'
-    return 'bg-green-500'
+    if (percentUsed >= 100) return '#ef4444'
+    if (percentUsed >= 75) return '#eab308'
+    return '#22c55e'
   }
 
   const handleDelete = async () => {
@@ -73,7 +73,7 @@ export function CategoryCard({ category, budget, spent }: CategoryCardProps) {
             <span>${spent.toFixed(2)} spent</span>
             <span>${budgeted.toFixed(2)} budgeted</span>
           </div>
-          <Progress value={percentUsed} className={getProgressColor()} />
+          <Progress value={percentUsed} className="h-2" style={{ ['--progress-color' as string]: getProgressColor() }} />
           <p className={`text-sm ${remaining < 0 ? 'text-red-500' : 'text-muted-foreground'}`}>
             ${Math.abs(remaining).toFixed(2)} {remaining < 0 ? 'over budget' : 'remaining'}
           </p>
