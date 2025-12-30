@@ -148,6 +148,32 @@ export type Database = {
           last_used_at?: string
         }
       }
+      auth_attempts: {
+        Row: {
+          id: string
+          ip_address: string
+          attempt_count: number
+          last_attempt_at: string
+          lockout_until: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          ip_address: string
+          attempt_count?: number
+          last_attempt_at?: string
+          lockout_until?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          ip_address?: string
+          attempt_count?: number
+          last_attempt_at?: string
+          lockout_until?: string | null
+          created_at?: string
+        }
+      }
     }
   }
 }
