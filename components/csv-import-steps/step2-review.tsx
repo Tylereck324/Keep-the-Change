@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
+import { Input } from '@/components/ui/input'
 import {
   Select,
   SelectContent,
@@ -44,6 +45,7 @@ export function Step2Review({
   const [selectedRows, setSelectedRows] = useState<Set<number>>(new Set())
   const [bulkCategoryId, setBulkCategoryId] = useState<string>('')
   const [filter, setFilter] = useState<'all' | 'uncategorized'>('all')
+  const [searchQuery, setSearchQuery] = useState<string>('')
   const [showCreateDialog, setShowCreateDialog] = useState(false)
   const [pendingCategoryIndex, setPendingCategoryIndex] = useState<number | null>(null)
 
@@ -158,13 +160,25 @@ export function Step2Review({
   }
 
   const filteredTransactions = useMemo(() => {
+    let filtered = reviewedTransactions.map((txn, i) => ({ txn, index: i }))
+
+    // Apply uncategorized filter
     if (filter === 'uncategorized') {
-      return reviewedTransactions.map((txn, i) => ({ txn, index: i })).filter(
-        ({ txn }) => !txn.categoryId
+      filtered = filtered.filter(({ txn }) => !txn.categoryId)
+    }
+
+    // Apply search query filter
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase()
+      filtered = filtered.filter(({ txn }) =>
+        txn.description.toLowerCase().includes(query) ||
+        txn.date.toLowerCase().includes(query) ||
+        txn.amount.toString().includes(query)
       )
     }
-    return reviewedTransactions.map((txn, i) => ({ txn, index: i }))
-  }, [reviewedTransactions, filter])
+
+    return filtered
+  }, [reviewedTransactions, filter, searchQuery])
 
   const allCategorized = reviewedTransactions.every((txn) => txn.categoryId)
   const hasSelections = selectedRows.size > 0
@@ -199,22 +213,49 @@ export function Step2Review({
         </div>
       </div>
 
-      {/* Filter */}
-      <div className="flex items-center gap-2">
-        <Button
-          variant={filter === 'all' ? 'default' : 'outline'}
-          size="sm"
-          onClick={() => setFilter('all')}
-        >
-          Show all
-        </Button>
-        <Button
-          variant={filter === 'uncategorized' ? 'default' : 'outline'}
-          size="sm"
-          onClick={() => setFilter('uncategorized')}
-        >
-          Show only uncategorized
-        </Button>
+      {/* Filter and Search */}
+      <div className="space-y-3">
+        <div className="flex items-center gap-2">
+          <Button
+            variant={filter === 'all' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setFilter('all')}
+          >
+            Show all
+          </Button>
+          <Button
+            variant={filter === 'uncategorized' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setFilter('uncategorized')}
+          >
+            Show only uncategorized
+          </Button>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Input
+            type="text"
+            placeholder="Search transactions by description, date, or amount..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="flex-1"
+          />
+          {searchQuery && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setSearchQuery('')}
+            >
+              Clear
+            </Button>
+          )}
+        </div>
+
+        {filteredTransactions.length < reviewedTransactions.length && (
+          <p className="text-sm text-muted-foreground">
+            Showing {filteredTransactions.length} of {reviewedTransactions.length} transactions
+          </p>
+        )}
       </div>
 
       {/* Bulk actions */}
