@@ -23,8 +23,13 @@ export type BulkImportResult = {
 }
 
 /**
- * Bulk import transactions with batch processing
- * Processes transactions in batches of 100 to avoid timeouts
+ * Bulk import transactions with batch processing.
+ * Processes transactions in batches of 100 to avoid timeouts.
+ * 
+ * WARNING: This operation is NOT atomic. If a later batch fails,
+ * earlier batches that succeeded will still be committed. Consider
+ * implementing a Postgres RPC function with transaction handling for
+ * truly atomic imports in the future.
  */
 export async function bulkImportTransactions(
   transactions: BulkImportTransaction[]
