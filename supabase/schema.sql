@@ -15,7 +15,8 @@ create table categories (
   household_id uuid not null references households(id) on delete cascade,
   name text not null,
   color text not null default '#6366f1',
-  created_at timestamp with time zone default now()
+  created_at timestamp with time zone default now(),
+  deleted_at timestamp with time zone default null
 );
 
 -- Transactions table

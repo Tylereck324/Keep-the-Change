@@ -26,3 +26,7 @@ Users needed the ability to delete categories that were no longer relevant. The 
         - [x] Removed Nested Modal (removed delete button from Form).
         - [x] Renamed `lib/constants/index.ts` to `lib/constants.ts`.
         - [x] Used `revalidatePath('/', 'layout')` for robust cache clearing.
+    - [x] **Principal Architect Review Fixes (Soft Deletes)**:
+        - [x] Updated schema to include `deleted_at`.
+        - [x] Changed logic to "Archive" instead of "Delete" to preserve historical data.
+        - [x] Updated UI terminology to "Archive".

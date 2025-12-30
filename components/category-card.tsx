@@ -34,10 +34,10 @@ export function CategoryCard({ category, budget, spent }: CategoryCardProps) {
     setDeleting(true)
     try {
       await deleteCategory(category.id)
-      toast.success('Category deleted')
+      toast.success('Category archived')
       setDeleteDialogOpen(false)
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Failed to delete')
+      toast.error(err instanceof Error ? err.message : 'Failed to archive')
     } finally {
       setDeleting(false)
     }
@@ -68,7 +68,7 @@ export function CategoryCard({ category, budget, spent }: CategoryCardProps) {
                   size="sm"
                   disabled={deleting}
                 >
-                  Delete
+                  Archive
                 </Button>
               }
               onConfirm={handleDelete}

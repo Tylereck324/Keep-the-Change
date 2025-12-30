@@ -35,6 +35,7 @@ export async function getCategories(): Promise<Category[]> {
     .from('categories')
     .select('*')
     .eq('household_id', householdId)
+    .is('deleted_at', null)
     .order('name')
 
   if (error) throw new Error(`Failed to fetch categories: ${error.message}`)
@@ -95,7 +96,8 @@ export async function deleteCategory(id: string): Promise<void> {
 
   const { error } = await supabase
     .from('categories')
-    .delete()
+    // @ts-expect-error - Supabase client type inference issue with new column
+    .update({ deleted_at: new Date().toISOString() })
     .eq('id', id)
     .eq('household_id', householdId)
 

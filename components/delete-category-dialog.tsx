@@ -29,10 +29,10 @@ export function DeleteCategoryDialog({ trigger, onConfirm, loading, open, onOpen
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+          <AlertDialogTitle>Archive Category?</AlertDialogTitle>
           <AlertDialogDescription>
-            This action cannot be undone. This will permanently delete the category
-            and any transactions associated with it will become uncategorized.
+            This will remove the category from your active list. Historical transactions
+            and budget data will be preserved.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
@@ -45,7 +45,7 @@ export function DeleteCategoryDialog({ trigger, onConfirm, loading, open, onOpen
             disabled={loading}
             className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
           >
-            {loading ? 'Deleting...' : 'Delete'}
+            {loading ? 'Archiving...' : 'Archive'}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

@@ -28,6 +28,7 @@ export type Database = {
           name: string
           color: string
           created_at: string
+          deleted_at: string | null
         }
         Insert: {
           id?: string
@@ -35,6 +36,7 @@ export type Database = {
           name: string
           color: string
           created_at?: string
+          deleted_at?: string | null
         }
         Update: {
           id?: string
@@ -42,6 +44,7 @@ export type Database = {
           name?: string
           color?: string
           created_at?: string
+          deleted_at?: string | null
         }
       }
       transactions: {
