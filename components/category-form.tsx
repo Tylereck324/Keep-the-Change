@@ -11,7 +11,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
-import { createCategory, updateCategory } from '@/lib/actions/categories'
+import { createCategory, updateCategory, deleteCategory } from '@/lib/actions/categories'
 
 const COLORS = [
   '#ef4444', '#f97316', '#eab308', '#22c55e', '#14b8a6',
@@ -100,9 +100,32 @@ export function CategoryForm({ category, trigger, onSuccess }: CategoryFormProps
             </div>
           </div>
 
-          <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? 'Saving...' : isEditing ? 'Save Changes' : 'Create Category'}
-          </Button>
+          <div className="flex gap-2">
+            <Button type="submit" className="flex-1" disabled={loading}>
+              {loading ? 'Saving...' : isEditing ? 'Save Changes' : 'Create Category'}
+            </Button>
+            {isEditing && (
+              <Button
+                type="button"
+                variant="destructive"
+                onClick={async () => {
+                  if (!confirm('Are you sure you want to delete this category?')) return
+                  setLoading(true)
+                  try {
+                    await deleteCategory(category.id)
+                    setOpen(false)
+                    onSuccess?.()
+                  } catch (err) {
+                    setError(err instanceof Error ? err.message : 'Failed to delete')
+                    setLoading(false)
+                  }
+                }}
+                disabled={loading}
+              >
+                Delete
+              </Button>
+            )}
+          </div>
         </form>
       </DialogContent>
     </Dialog>
