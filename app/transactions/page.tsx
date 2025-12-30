@@ -3,8 +3,11 @@ import { redirect } from 'next/navigation'
 import { getTransactions } from '@/lib/actions/transactions'
 import { getCategories } from '@/lib/actions/categories'
 import { getBudgetDataForWarnings } from '@/lib/actions/budgets'
+import { getAllKeywords } from '@/lib/actions/keywords'
+import { getMerchantPatterns } from '@/lib/actions/csv-import'
 import { TransactionForm } from '@/components/transaction-form'
 import { TransactionList } from '@/components/transaction-list'
+import { ImportButton } from '@/components/import-button'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 
@@ -12,10 +15,12 @@ export default async function TransactionsPage() {
   const session = await getSession()
   if (!session) redirect('/')
 
-  const [transactions, categories, budgetData] = await Promise.all([
+  const [transactions, categories, budgetData, keywordsByCategory, merchantPatterns] = await Promise.all([
     getTransactions(),
     getCategories(),
     getBudgetDataForWarnings(),
+    getAllKeywords(),
+    getMerchantPatterns(),
   ])
 
   const total = transactions.reduce((sum, t) => sum + t.amount, 0)
@@ -32,12 +37,20 @@ export default async function TransactionsPage() {
             Total: ${total.toFixed(2)}
           </p>
         </div>
-        <TransactionForm
-          categories={categories}
-          trigger={<Button>+ Add Transaction</Button>}
-          budgetMap={budgetData.budgetMap}
-          spentMap={budgetData.spentMap}
-        />
+        <div className="flex gap-2">
+          <ImportButton
+            categories={categories}
+            keywordsByCategory={keywordsByCategory}
+            merchantPatterns={merchantPatterns}
+            existingTransactions={transactions}
+          />
+          <TransactionForm
+            categories={categories}
+            trigger={<Button>+ Add Transaction</Button>}
+            budgetMap={budgetData.budgetMap}
+            spentMap={budgetData.spentMap}
+          />
+        </div>
       </div>
 
       <TransactionList
