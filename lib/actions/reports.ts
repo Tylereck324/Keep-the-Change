@@ -136,13 +136,18 @@ export async function getMultiMonthTrend(months: string[]): Promise<TrendData[]>
 
   const data = await Promise.all(
     months.map(async (month) => {
-      const [budgets, transactions] = await Promise.all([
+      const [budgets, allTransactions] = await Promise.all([
         getMonthlyBudgets(month),
         getTransactions({ startDate: `${month}-01`, endDate: `${month}-31` }),
       ])
 
+      // Filter out income
+      const isIncome = (t: typeof allTransactions[0]) =>
+        (t as { type?: string }).type === 'income' || t.category?.name?.toLowerCase() === 'income'
+      const expenses = allTransactions.filter(t => !isIncome(t))
+
       const budgeted = budgets.reduce((sum, b) => sum + b.budgeted_amount, 0)
-      const spent = transactions.reduce((sum, t) => sum + t.amount, 0)
+      const spent = expenses.reduce((sum, t) => sum + t.amount, 0)
 
       return { month, spent, budgeted }
     })
@@ -160,13 +165,18 @@ export async function getForecast(currentMonth: string): Promise<{
   const householdId = await getSession()
   if (!householdId) throw new Error('Not authenticated')
 
-  const [budgets, transactions] = await Promise.all([
+  const [budgets, allTransactions] = await Promise.all([
     getMonthlyBudgets(currentMonth),
     getTransactions({ startDate: `${currentMonth}-01`, endDate: `${currentMonth}-31` }),
   ])
 
+  // Filter out income
+  const isIncome = (t: typeof allTransactions[0]) =>
+    (t as { type?: string }).type === 'income' || t.category?.name?.toLowerCase() === 'income'
+  const expenses = allTransactions.filter(t => !isIncome(t))
+
   const totalBudgeted = budgets.reduce((sum, b) => sum + b.budgeted_amount, 0)
-  const totalSpent = transactions.reduce((sum, t) => sum + t.amount, 0)
+  const totalSpent = expenses.reduce((sum, t) => sum + t.amount, 0)
 
   // Calculate days in month and days passed
   const [year, month] = currentMonth.split('-').map(Number)
@@ -207,15 +217,20 @@ export async function getYearSummary(year: number): Promise<{
     getCategories(),
     Promise.all(
       months.map(async (month) => {
-        const [budgets, transactions] = await Promise.all([
+        const [budgets, allTransactions] = await Promise.all([
           getMonthlyBudgets(month),
           getTransactions({ startDate: `${month}-01`, endDate: `${month}-31` }),
         ])
 
-        const budgeted = budgets.reduce((sum, b) => sum + b.budgeted_amount, 0)
-        const spent = transactions.reduce((sum, t) => sum + t.amount, 0)
+        // Filter out income
+        const isIncome = (t: typeof allTransactions[0]) =>
+          (t as { type?: string }).type === 'income' || t.category?.name?.toLowerCase() === 'income'
+        const expenses = allTransactions.filter(t => !isIncome(t))
 
-        return { month, budgeted, spent, transactions }
+        const budgeted = budgets.reduce((sum, b) => sum + b.budgeted_amount, 0)
+        const spent = expenses.reduce((sum, t) => sum + t.amount, 0)
+
+        return { month, budgeted, spent, transactions: expenses }
       })
     ),
   ])
@@ -235,7 +250,7 @@ export async function getYearSummary(year: number): Promise<{
       ? monthsWithSpending.reduce((min, m) => (m.spent < min.spent ? m : min))
       : { month: months[0], spent: 0 }
 
-  // Calculate category totals
+  // Calculate category totals (already filtered to expenses only)
   const categoryTotals = new Map<string, number>()
   monthlyData.forEach((m) => {
     m.transactions.forEach((t) => {
