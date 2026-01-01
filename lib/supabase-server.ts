@@ -18,10 +18,17 @@ if (!supabaseUrl) {
 }
 
 // Only validate service key on server (it won't exist in client bundles)
-if (typeof window === 'undefined' && !supabaseServiceKey) {
-  console.warn(
-    'WARNING: SUPABASE_SERVICE_ROLE_KEY not set. Server-side database operations will fail.'
-  )
+if (typeof window === 'undefined') {
+  console.log('[DEBUG] Server Config Check:')
+  console.log('[DEBUG] URL:', supabaseUrl)
+  console.log('[DEBUG] Service Key Length:', supabaseServiceKey?.length)
+  console.log('[DEBUG] Service Key Start:', supabaseServiceKey?.slice(0, 10))
+
+  if (!supabaseServiceKey) {
+    console.warn(
+      'WARNING: SUPABASE_SERVICE_ROLE_KEY not set. Using placeholder.'
+    )
+  }
 }
 
 /**
