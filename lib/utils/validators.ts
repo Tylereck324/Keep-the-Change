@@ -70,9 +70,9 @@ export function validateDate(dateStr: string): void {
     if (isNaN(date.getTime())) {
         throw new Error('Invalid date value')
     }
-    if (date > new Date()) {
-        throw new Error('Date cannot be in the future')
-    }
+    // Future date check removed to allow filtering by date ranges (e.g., end of month)
+    // and presumably future transactions/budgets.
+
 }
 
 // ============================================================================
