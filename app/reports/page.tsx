@@ -23,7 +23,10 @@ export default async function ReportsPage() {
     getMultiMonthTrend(last6Months),
     getForecast(currentMonth),
     getYearSummary(currentYear),
-  ])
+  ]).catch(err => {
+    console.error('Reports Data Fetch Error:', err)
+    throw new Error(`Failed to load report data: ${err.message}`)
+  })
 
   const monthName = new Date(currentMonth + '-01').toLocaleDateString('en-US', {
     month: 'long',
