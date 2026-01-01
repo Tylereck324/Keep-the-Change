@@ -260,14 +260,16 @@ export async function getYearSummary(year: number): Promise<{
   // Group budgets by month
   const budgetsByMonth = new Map<string, number>()
   yearBudgets.forEach((b) => {
-    budgetsByMonth.set(b.month, (budgetsByMonth.get(b.month) || 0) + b.budgeted_amount)
+    const amt = b.budgeted_amount_cents ?? dollarsToCents(b.budgeted_amount)
+    budgetsByMonth.set(b.month, (budgetsByMonth.get(b.month) || 0) + amt)
   })
 
   // Group expenses by month
   const expensesByMonth = new Map<string, number>()
   expenses.forEach((t) => {
     const month = t.date.slice(0, 7) // Extract YYYY-MM
-    expensesByMonth.set(month, (expensesByMonth.get(month) || 0) + t.amount)
+    const amt = t.amount_cents ?? dollarsToCents(t.amount)
+    expensesByMonth.set(month, (expensesByMonth.get(month) || 0) + amt)
   })
 
   // Build monthly data - IN CENTS

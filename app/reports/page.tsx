@@ -231,13 +231,19 @@ export default async function ReportsPage() {
             <div className="flex justify-between">
               <span className="text-muted-foreground">Highest Spend Month:</span>
               <span className="font-semibold">
-                {new Date(yearSummary.highestSpendMonth.month + '-01').toLocaleDateString('en-US', { month: 'long' })} - ${yearSummary.highestSpendMonth.amount.toFixed(2)}
+                {yearSummary.highestSpendMonth.month && yearSummary.highestSpendMonth.month.match(/^\d{4}-\d{2}$/)
+                  ? new Date(yearSummary.highestSpendMonth.month + '-01').toLocaleDateString('en-US', { month: 'long' })
+                  : 'N/A'}
+                - ${yearSummary.highestSpendMonth.amount.toFixed(2)}
               </span>
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">Lowest Spend Month:</span>
               <span className="font-semibold">
-                {new Date(yearSummary.lowestSpendMonth.month + '-01').toLocaleDateString('en-US', { month: 'long' })} - ${yearSummary.lowestSpendMonth.amount.toFixed(2)}
+                {yearSummary.lowestSpendMonth.month && yearSummary.lowestSpendMonth.month.match(/^\d{4}-\d{2}$/)
+                  ? new Date(yearSummary.lowestSpendMonth.month + '-01').toLocaleDateString('en-US', { month: 'long' })
+                  : 'N/A'}
+                - ${yearSummary.lowestSpendMonth.amount.toFixed(2)}
               </span>
             </div>
           </div>
