@@ -29,8 +29,8 @@ if (typeof window === 'undefined' && !supabaseServiceKey) {
  * Bypasses RLS - always filter by household_id in your queries!
  */
 export const supabaseAdmin = createClient<Database>(
-  supabaseUrl,
-  supabaseServiceKey || '', // Empty string to prevent crash on import, but operations will fail
+  supabaseUrl || 'https://placeholder.supabase.co',
+  supabaseServiceKey || 'placeholder-key', // Prevent crash on import
   {
     auth: {
       autoRefreshToken: false,
