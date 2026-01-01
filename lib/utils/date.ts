@@ -15,7 +15,9 @@ export function getCurrentMonth(): string {
  * Formats a YYYY-MM month string to a human-readable format (e.g., "January 2024").
  */
 export function formatMonth(month: string): string {
-    return new Date(`${month}-01`).toLocaleDateString('en-US', {
+    const [year, monthNum] = month.split('-').map(Number)
+    const date = new Date(year, monthNum - 1, 1)
+    return date.toLocaleDateString('en-US', {
         month: 'long',
         year: 'numeric',
     })

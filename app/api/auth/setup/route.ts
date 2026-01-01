@@ -58,8 +58,13 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (error || !household) {
+      console.error('Household creation error:', error)
       return NextResponse.json(
-        { error: 'Failed to create household' },
+        {
+          error: 'Failed to create household',
+          details: error?.message || 'Unknown error',
+          code: error?.code
+        },
         { status: 500 }
       )
     }

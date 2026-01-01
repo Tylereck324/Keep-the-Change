@@ -10,6 +10,7 @@ import { RecentTransactions } from './recent-transactions'
 import { CategoryForm } from './category-form'
 import { getCurrentMonth } from '@/lib/utils/date'
 import { isIncomeTransaction } from '@/lib/utils/transaction-helpers'
+import { formatMoney, dollarsToCents, addCents } from '@/lib/utils/money'
 
 export async function Dashboard() {
   const currentMonth = getCurrentMonth()
@@ -23,27 +24,38 @@ export async function Dashboard() {
     getTransactionsByMonth(currentMonth),
   ])
 
-  const budgetMap = new Map(budgets.map((b) => [b.category_id, b.budgeted_amount]))
+  const budgetMap = new Map(budgets.map((b) => [
+    b.category_id,
+    b.budgeted_amount_cents ?? dollarsToCents(b.budgeted_amount)
+  ]))
 
   // Separate income and expenses
   const incomeTransactions = transactions.filter(isIncomeTransaction)
   const expenseTransactions = transactions.filter((t) => !isIncomeTransaction(t))
 
-  // Calculate spent per category (expenses only)
+  // Calculate spent per category (expenses only) - in CENTS
   const spentByCategory = new Map<string, number>()
   expenseTransactions.forEach((t) => {
     if (t.category_id) {
+      const amountCents = t.amount_cents ?? dollarsToCents(t.amount)
       spentByCategory.set(
         t.category_id,
-        (spentByCategory.get(t.category_id) ?? 0) + t.amount
+        (spentByCategory.get(t.category_id) ?? 0) + amountCents
       )
     }
   })
 
-  const totalBudgeted = budgets.reduce((sum, b) => sum + b.budgeted_amount, 0)
-  const totalIncome = incomeTransactions.reduce((sum, t) => sum + t.amount, 0)
-  const totalExpenses = expenseTransactions.reduce((sum, t) => sum + t.amount, 0)
-  const netCashFlow = totalIncome - totalExpenses
+  // Calculate totals in CENTS
+  const totalBudgetedCents = budgets.reduce((sum, b) =>
+    sum + (b.budgeted_amount_cents ?? dollarsToCents(b.budgeted_amount)), 0
+  )
+  const totalIncomeCents = incomeTransactions.reduce((sum, t) =>
+    sum + (t.amount_cents ?? dollarsToCents(t.amount)), 0
+  )
+  const totalExpensesCents = expenseTransactions.reduce((sum, t) =>
+    sum + (t.amount_cents ?? dollarsToCents(t.amount)), 0
+  )
+  const netCashFlowCents = totalIncomeCents - totalExpensesCents
 
   const monthName = new Date(currentMonth + '-01').toLocaleDateString('en-US', {
     month: 'long',
@@ -70,7 +82,7 @@ export async function Dashboard() {
             <CardTitle className="text-sm text-muted-foreground">Income</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold text-green-600 dark:text-green-400">${totalIncome.toFixed(2)}</p>
+            <p className="text-2xl font-bold text-green-600 dark:text-green-400">{formatMoney(totalIncomeCents)}</p>
           </CardContent>
         </Card>
         <Card>
@@ -78,7 +90,7 @@ export async function Dashboard() {
             <CardTitle className="text-sm text-muted-foreground">Expenses</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold">${totalExpenses.toFixed(2)}</p>
+            <p className="text-2xl font-bold">{formatMoney(totalExpensesCents)}</p>
           </CardContent>
         </Card>
         <Card>
@@ -86,34 +98,34 @@ export async function Dashboard() {
             <CardTitle className="text-sm text-muted-foreground">Net</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className={`text-2xl font-bold ${netCashFlow < 0 ? 'text-red-500' : 'text-green-600 dark:text-green-400'}`}>
-              {netCashFlow >= 0 ? '+' : ''}${netCashFlow.toFixed(2)}
+            <p className={`text-2xl font-bold ${netCashFlowCents < 0 ? 'text-red-500' : 'text-green-600 dark:text-green-400'}`}>
+              {netCashFlowCents >= 0 ? '+' : ''}{formatMoney(netCashFlowCents).replace('$', '') /* remove $ to avoid +$ */}
             </p>
           </CardContent>
         </Card>
       </div>
 
       {/* Budget Progress */}
-      {totalBudgeted > 0 && (
+      {totalBudgetedCents > 0 && (
         <Card className="mb-6">
           <CardContent className="py-3">
             <div className="flex justify-between items-center mb-2">
               <span className="text-sm font-medium">Budget Progress</span>
               <span className="text-sm text-muted-foreground">
-                ${totalExpenses.toFixed(2)} / ${totalBudgeted.toFixed(2)}
+                {formatMoney(totalExpensesCents)} / {formatMoney(totalBudgetedCents)}
               </span>
             </div>
             <Progress
-              value={Math.min((totalExpenses / totalBudgeted) * 100, 100)}
+              value={Math.min((totalExpensesCents / totalBudgetedCents) * 100, 100)}
               className="h-2"
               style={{
                 ['--progress-color' as string]:
-                  totalExpenses > totalBudgeted ? '#ef4444' :
-                    totalExpenses > totalBudgeted * 0.75 ? '#eab308' : '#22c55e'
+                  totalExpensesCents > totalBudgetedCents ? '#ef4444' :
+                    totalExpensesCents > totalBudgetedCents * 0.75 ? '#eab308' : '#22c55e'
               }}
             />
-            <p className={`text-xs mt-1 ${totalBudgeted - totalExpenses < 0 ? 'text-red-500' : 'text-muted-foreground'}`}>
-              ${Math.abs(totalBudgeted - totalExpenses).toFixed(2)} {totalBudgeted - totalExpenses >= 0 ? 'remaining' : 'over budget'}
+            <p className={`text-xs mt-1 ${totalBudgetedCents - totalExpensesCents < 0 ? 'text-red-500' : 'text-muted-foreground'}`}>
+              {formatMoney(Math.abs(totalBudgetedCents - totalExpensesCents))} {totalBudgetedCents - totalExpensesCents >= 0 ? 'remaining' : 'over budget'}
             </p>
           </CardContent>
         </Card>
@@ -145,10 +157,10 @@ export async function Dashboard() {
         ) : (
           <div className="space-y-3">
             {categories.map((category) => {
-              const budgeted = budgetMap.get(category.id) ?? 0
-              const spent = spentByCategory.get(category.id) ?? 0
-              const remaining = budgeted - spent
-              const percentUsed = budgeted > 0 ? Math.min((spent / budgeted) * 100, 100) : 0
+              const budgetedCents = budgetMap.get(category.id) ?? 0
+              const spentCents = spentByCategory.get(category.id) ?? 0
+              const remainingCents = budgetedCents - spentCents
+              const percentUsed = budgetedCents > 0 ? Math.min((spentCents / budgetedCents) * 100, 100) : 0
 
               return (
                 <Card key={category.id}>
@@ -176,8 +188,8 @@ export async function Dashboard() {
                           }
                         />
                       </div>
-                      <span className={`text-sm ${remaining < 0 ? 'text-destructive' : 'text-muted-foreground'}`}>
-                        ${remaining.toFixed(2)} left
+                      <span className={`text-sm ${remainingCents < 0 ? 'text-destructive' : 'text-muted-foreground'}`}>
+                        {formatMoney(remainingCents)} left
                       </span>
                     </div>
                     <Progress
@@ -190,8 +202,8 @@ export async function Dashboard() {
                       }}
                     />
                     <div className="flex justify-between text-xs text-muted-foreground mt-1">
-                      <span>${spent.toFixed(2)} spent</span>
-                      <span>${budgeted.toFixed(2)} budgeted</span>
+                      <span>{formatMoney(spentCents)} spent</span>
+                      <span>{formatMoney(budgetedCents)} budgeted</span>
                     </div>
                   </CardContent>
                 </Card>

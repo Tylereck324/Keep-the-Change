@@ -4,7 +4,9 @@ import { getSession } from '@/lib/auth'
 import { getTransactions } from './transactions'
 import { getCategories } from './categories'
 import { getMonthlyBudgets } from './budgets'
+
 import { isIncomeTransaction } from '@/lib/utils/transaction-helpers'
+import { dollarsToCents, centsToDollars, addCents } from '@/lib/utils/money'
 
 export interface CategoryReport {
   categoryId: string
@@ -50,7 +52,10 @@ export async function getMonthlyReport(month: string): Promise<MonthlyReport> {
   const incomeTransactions = allTransactions.filter(isIncomeTransaction)
   const expenseTransactions = allTransactions.filter(t => !isIncomeTransaction(t))
 
-  const budgetMap = new Map(budgets.map((b) => [b.category_id, b.budgeted_amount]))
+  const budgetMap = new Map(budgets.map((b) => [
+    b.category_id,
+    b.budgeted_amount_cents ?? dollarsToCents(b.budgeted_amount)
+  ]))
   const categoryMap = new Map(categories.map((c) => [c.id, c]))
 
   // Calculate spending by category (expenses only)
@@ -59,67 +64,72 @@ export async function getMonthlyReport(month: string): Promise<MonthlyReport> {
 
   expenseTransactions.forEach((t) => {
     if (t.category_id) {
-      categorySpending.set(t.category_id, (categorySpending.get(t.category_id) || 0) + t.amount)
+      const amountCents = t.amount_cents ?? dollarsToCents(t.amount)
+      categorySpending.set(t.category_id, (categorySpending.get(t.category_id) || 0) + amountCents)
       categoryTransactionCount.set(t.category_id, (categoryTransactionCount.get(t.category_id) || 0) + 1)
     }
   })
 
   // Build category reports
   const categoryReports: CategoryReport[] = categories.map((cat) => {
-    const budgeted = budgetMap.get(cat.id) || 0
-    const spent = categorySpending.get(cat.id) || 0
-    const remaining = budgeted - spent
-    const percentUsed = budgeted > 0 ? (spent / budgeted) * 100 : 0
+    const budgetedCents = budgetMap.get(cat.id) || 0
+    const spentCents = categorySpending.get(cat.id) || 0
+    const remainingCents = budgetedCents - spentCents
+    const percentUsed = budgetedCents > 0 ? (spentCents / budgetedCents) * 100 : 0
 
     return {
       categoryId: cat.id,
       categoryName: cat.name,
       categoryColor: cat.color,
-      budgeted,
-      spent,
-      remaining,
+      budgeted: centsToDollars(budgetedCents),
+      spent: centsToDollars(spentCents),
+      remaining: centsToDollars(remainingCents),
       percentUsed,
       transactionCount: categoryTransactionCount.get(cat.id) || 0,
     }
   })
 
-  // Calculate daily spending (expenses only)
+  // Calculate daily spending (expenses only) - Using Cents internally
   const dailySpending = new Map<string, number>()
   expenseTransactions.forEach((t) => {
     const date = t.date
-    dailySpending.set(date, (dailySpending.get(date) || 0) + t.amount)
+    const amountCents = t.amount_cents ?? dollarsToCents(t.amount)
+    dailySpending.set(date, (dailySpending.get(date) || 0) + amountCents)
   })
 
+  // Convert daily spending back to dollars for charts
   const transactionsByDay = Array.from(dailySpending.entries())
-    .map(([date, amount]) => ({ date, amount }))
+    .map(([date, amountCents]) => ({ date, amount: centsToDollars(amountCents) }))
     .sort((a, b) => a.date.localeCompare(b.date))
 
   // Top transactions (expenses only)
   const topTransactions = expenseTransactions
-    .sort((a, b) => b.amount - a.amount)
+    .sort((a, b) => (b.amount_cents ?? dollarsToCents(b.amount)) - (a.amount_cents ?? dollarsToCents(a.amount)))
     .slice(0, 10)
     .map((t) => ({
       id: t.id,
-      amount: t.amount,
+      amount: centsToDollars(t.amount_cents ?? dollarsToCents(t.amount)), // Normalize to dollars from cents
       description: t.description || 'No description',
       date: t.date,
       categoryName: t.category?.name || 'Uncategorized',
     }))
 
-  const totalBudgeted = budgets.reduce((sum, b) => sum + b.budgeted_amount, 0)
-  const totalIncome = incomeTransactions.reduce((sum, t) => sum + t.amount, 0)
-  const totalSpent = expenseTransactions.reduce((sum, t) => sum + t.amount, 0)
-  const totalRemaining = totalBudgeted - totalSpent
-  const netCashFlow = totalIncome - totalSpent
-  const savingsRate = totalIncome > 0 ? (netCashFlow / totalIncome) * 100 : 0
+  const totalBudgetedCents = budgets.reduce((sum, b) => sum + (b.budgeted_amount_cents ?? dollarsToCents(b.budgeted_amount)), 0)
+  const totalIncomeCents = incomeTransactions.reduce((sum, t) => sum + (t.amount_cents ?? dollarsToCents(t.amount)), 0)
+  const totalSpentCents = expenseTransactions.reduce((sum, t) => sum + (t.amount_cents ?? dollarsToCents(t.amount)), 0)
+  const totalRemainingCents = totalBudgetedCents - totalSpentCents
+  const netCashFlowCents = totalIncomeCents - totalSpentCents
+
+  // Ratios match regardless of units
+  const savingsRate = totalIncomeCents > 0 ? (netCashFlowCents / totalIncomeCents) * 100 : 0
 
   return {
     month,
-    totalBudgeted,
-    totalIncome,
-    totalSpent,
-    totalRemaining,
-    netCashFlow,
+    totalBudgeted: centsToDollars(totalBudgetedCents),
+    totalIncome: centsToDollars(totalIncomeCents),
+    totalSpent: centsToDollars(totalSpentCents),
+    totalRemaining: centsToDollars(totalRemainingCents),
+    netCashFlow: centsToDollars(netCashFlowCents),
     savingsRate,
     categories: categoryReports,
     transactionsByDay,
@@ -153,21 +163,23 @@ export async function getMultiMonthTrend(months: string[]): Promise<TrendData[]>
   // Group budgets by month
   const budgetsByMonth = new Map<string, number>()
   allBudgets.forEach((b) => {
-    budgetsByMonth.set(b.month, (budgetsByMonth.get(b.month) || 0) + b.budgeted_amount)
+    const amt = b.budgeted_amount_cents ?? dollarsToCents(b.budgeted_amount)
+    budgetsByMonth.set(b.month, (budgetsByMonth.get(b.month) || 0) + amt)
   })
 
   // Group expenses by month (extract YYYY-MM from date)
   const expensesByMonth = new Map<string, number>()
   expenses.forEach((t) => {
     const month = t.date.slice(0, 7) // Extract YYYY-MM
-    expensesByMonth.set(month, (expensesByMonth.get(month) || 0) + t.amount)
+    const amt = t.amount_cents ?? dollarsToCents(t.amount)
+    expensesByMonth.set(month, (expensesByMonth.get(month) || 0) + amt)
   })
 
   // Build result for each requested month
   const data = months.map((month) => ({
     month,
-    spent: expensesByMonth.get(month) || 0,
-    budgeted: budgetsByMonth.get(month) || 0,
+    spent: centsToDollars(expensesByMonth.get(month) || 0),
+    budgeted: centsToDollars(budgetsByMonth.get(month) || 0),
   }))
 
   return data.sort((a, b) => a.month.localeCompare(b.month))
@@ -190,25 +202,29 @@ export async function getForecast(currentMonth: string): Promise<{
   // Filter out income
   const expenses = allTransactions.filter(t => !isIncomeTransaction(t))
 
-  const totalBudgeted = budgets.reduce((sum, b) => sum + b.budgeted_amount, 0)
-  const totalSpent = expenses.reduce((sum, t) => sum + t.amount, 0)
+  const totalBudgetedCents = budgets.reduce((sum, b) => sum + (b.budgeted_amount_cents ?? dollarsToCents(b.budgeted_amount)), 0)
+  const totalSpentCents = expenses.reduce((sum, t) => sum + (t.amount_cents ?? dollarsToCents(t.amount)), 0)
 
   // Calculate days in month and days passed
   const [year, month] = currentMonth.split('-').map(Number)
+  // use 0 for day to get last day of previous month, wait... month is 1-indexed in split?
+  // standard js date month is 0-indexed.
+  // const [year, month] = '2024-02'.split('-') -> year=2024, month=2
+  // new Date(2024, 2, 0) -> last day of month 1 (Feb). Correct.
   const daysInMonth = new Date(year, month, 0).getDate()
   const today = new Date()
   const currentDay = today.getMonth() === month - 1 && today.getFullYear() === year ? today.getDate() : daysInMonth
   const daysRemaining = daysInMonth - currentDay
 
-  const averageDailySpend = currentDay > 0 ? totalSpent / currentDay : 0
-  const projectedSpending = totalSpent + averageDailySpend * daysRemaining
-  const projectedOverUnder = totalBudgeted - projectedSpending
+  const averageDailySpendCents = currentDay > 0 ? totalSpentCents / currentDay : 0
+  const projectedSpendingCents = totalSpentCents + averageDailySpendCents * daysRemaining
+  const projectedOverUnderCents = totalBudgetedCents - projectedSpendingCents
 
   return {
-    projectedSpending,
+    projectedSpending: centsToDollars(projectedSpendingCents),
     daysRemaining,
-    averageDailySpend,
-    projectedOverUnder,
+    averageDailySpend: centsToDollars(averageDailySpendCents),
+    projectedOverUnder: centsToDollars(projectedOverUnderCents),
   }
 }
 
@@ -254,19 +270,19 @@ export async function getYearSummary(year: number): Promise<{
     expensesByMonth.set(month, (expensesByMonth.get(month) || 0) + t.amount)
   })
 
-  // Build monthly data
-  const monthlyData = months.map((month) => ({
+  // Build monthly data - IN CENTS
+  const monthlyDataCents = months.map((month) => ({
     month,
     budgeted: budgetsByMonth.get(month) || 0,
     spent: expensesByMonth.get(month) || 0,
   }))
 
-  const totalBudgeted = monthlyData.reduce((sum, m) => sum + m.budgeted, 0)
-  const totalSpent = monthlyData.reduce((sum, m) => sum + m.spent, 0)
-  const totalSaved = totalBudgeted - totalSpent
-  const averageMonthlySpend = totalSpent / 12
+  const totalBudgetedCents = monthlyDataCents.reduce((sum, m) => sum + m.budgeted, 0)
+  const totalSpentCents = monthlyDataCents.reduce((sum, m) => sum + m.spent, 0)
+  const totalSavedCents = totalBudgetedCents - totalSpentCents
+  const averageMonthlySpendCents = totalSpentCents / 12
 
-  const monthsWithSpending = monthlyData.filter((m) => m.spent > 0)
+  const monthsWithSpending = monthlyDataCents.filter((m) => m.spent > 0)
   const highestSpendMonth =
     monthsWithSpending.length > 0
       ? monthsWithSpending.reduce((max, m) => (m.spent > max.spent ? m : max))
@@ -280,7 +296,8 @@ export async function getYearSummary(year: number): Promise<{
   const categoryTotals = new Map<string, number>()
   expenses.forEach((t) => {
     if (t.category_id) {
-      categoryTotals.set(t.category_id, (categoryTotals.get(t.category_id) || 0) + t.amount)
+      const amt = t.amount_cents ?? dollarsToCents(t.amount)
+      categoryTotals.set(t.category_id, (categoryTotals.get(t.category_id) || 0) + amt)
     }
   })
 
@@ -288,18 +305,18 @@ export async function getYearSummary(year: number): Promise<{
     .map((cat) => ({
       name: cat.name,
       color: cat.color,
-      total: categoryTotals.get(cat.id) || 0,
+      total: centsToDollars(categoryTotals.get(cat.id) || 0),
     }))
     .filter((c) => c.total > 0)
     .sort((a, b) => b.total - a.total)
 
   return {
-    totalBudgeted,
-    totalSpent,
-    totalSaved,
-    averageMonthlySpend,
-    highestSpendMonth: { month: highestSpendMonth.month, amount: highestSpendMonth.spent },
-    lowestSpendMonth: { month: lowestSpendMonth.month, amount: lowestSpendMonth.spent },
+    totalBudgeted: centsToDollars(totalBudgetedCents),
+    totalSpent: centsToDollars(totalSpentCents),
+    totalSaved: centsToDollars(totalSavedCents),
+    averageMonthlySpend: centsToDollars(averageMonthlySpendCents),
+    highestSpendMonth: { month: highestSpendMonth.month, amount: centsToDollars(highestSpendMonth.spent) },
+    lowestSpendMonth: { month: lowestSpendMonth.month, amount: centsToDollars(lowestSpendMonth.spent) },
     categoryTotals: categoryTotalsArray,
   }
 }

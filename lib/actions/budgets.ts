@@ -6,6 +6,7 @@ import { getSession } from '@/lib/auth'
 import { getAutoRolloverSetting } from '@/lib/actions/settings'
 import { MonthlyBudget } from '@/lib/types'
 import { validateMonth } from '@/lib/utils/validators'
+import { dollarsToCents, centsToDollars } from '@/lib/utils/money'
 
 export async function getMonthlyBudgets(month: string, endMonth?: string): Promise<MonthlyBudget[]> {
   validateMonth(month)
@@ -64,7 +65,7 @@ export async function setBudgetAmount(categoryId: string, month: string, amount:
         category_id: categoryId,
         month,
         budgeted_amount: amount,
-        budgeted_amount_cents: Math.round(amount * 100),
+        budgeted_amount_cents: dollarsToCents(amount),
       },
       { onConflict: 'household_id,category_id,month' }
     )
@@ -97,7 +98,7 @@ export async function copyBudgetFromPreviousMonth(currentMonth: string): Promise
   // Get previous month's budgets
   const { data: prevBudgets, error: fetchError } = await supabaseAdmin
     .from('monthly_budgets')
-    .select('category_id, budgeted_amount')
+    .select('category_id, budgeted_amount, budgeted_amount_cents')
     .eq('household_id', householdId)
     .eq('month', prevMonthStr)
 
@@ -110,12 +111,12 @@ export async function copyBudgetFromPreviousMonth(currentMonth: string): Promise
   }
 
   // Copy to current month
-  const newBudgets = prevBudgets.map((b: { category_id: string; budgeted_amount: number }) => ({
+  const newBudgets = prevBudgets.map((b: { category_id: string; budgeted_amount: number; budgeted_amount_cents?: number }) => ({
     household_id: householdId,
     category_id: b.category_id,
     month: currentMonth,
     budgeted_amount: b.budgeted_amount,
-    budgeted_amount_cents: Math.round(b.budgeted_amount * 100),
+    budgeted_amount_cents: b.budgeted_amount_cents ?? dollarsToCents(b.budgeted_amount),
   }))
 
   const { error } = await supabaseAdmin
@@ -174,7 +175,10 @@ export async function getBudgetDataForWarnings(): Promise<{
 
   // Get budgets for current month
   const budgets = await getMonthlyBudgets(currentMonth)
-  const budgetMapTemp = new Map(budgets.map((b) => [b.category_id, b.budgeted_amount]))
+  const budgetMapTemp = new Map(budgets.map((b) => [
+    b.category_id,
+    centsToDollars(b.budgeted_amount_cents ?? dollarsToCents(b.budgeted_amount))
+  ]))
 
   // Get transactions for current month
   const { getTransactionsByMonth } = await import('./transactions')
@@ -190,13 +194,20 @@ export async function getBudgetDataForWarnings(): Promise<{
       t.category?.name?.toLowerCase() !== 'income'
     )
     .forEach((t) => {
-      const current = spentMapTemp.get(t.category_id) ?? 0
-      spentMapTemp.set(t.category_id, current + t.amount)
+      const amountCents = t.amount_cents ?? dollarsToCents(t.amount)
+      const currentCents = spentMapTemp.get(t.category_id) ?? 0
+      spentMapTemp.set(t.category_id, currentCents + amountCents)
     })
+
+  // Convert back to dollars
+  const spentMapDollars = new Map<string, number>()
+  spentMapTemp.forEach((cents, catId) => {
+    spentMapDollars.set(catId, centsToDollars(cents))
+  })
 
   // Convert Maps to plain objects for client component serialization
   return {
     budgetMap: Object.fromEntries(budgetMapTemp),
-    spentMap: Object.fromEntries(spentMapTemp),
+    spentMap: Object.fromEntries(spentMapDollars),
   }
 }

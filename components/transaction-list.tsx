@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { toast } from 'sonner'
+import { formatMoney, dollarsToCents } from '@/lib/utils/money'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import {
@@ -63,7 +64,7 @@ export function TransactionList({ transactions, categories, budgetMap, spentMap 
               />
               <div>
                 <p className="font-medium">
-                  ${transaction.amount.toFixed(2)}
+                  {formatMoney(transaction.amount_cents ?? dollarsToCents(transaction.amount))}
                   {transaction.description && (
                     <span className="text-muted-foreground font-normal ml-2">
                       {transaction.description}
@@ -81,7 +82,7 @@ export function TransactionList({ transactions, categories, budgetMap, spentMap 
                 categories={categories}
                 transaction={transaction}
                 trigger={
-                  <Button variant="ghost" size="sm" aria-label={`Edit transaction: $${transaction.amount.toFixed(2)}`}>
+                  <Button variant="ghost" size="sm" aria-label={`Edit transaction: ${formatMoney(transaction.amount_cents ?? dollarsToCents(transaction.amount))}`}>
                     Edit
                   </Button>
                 }
@@ -94,7 +95,7 @@ export function TransactionList({ transactions, categories, budgetMap, spentMap 
                     variant="ghost"
                     size="sm"
                     disabled={deleting === transaction.id}
-                    aria-label={`Delete transaction: $${transaction.amount.toFixed(2)}`}
+                    aria-label={`Delete transaction: ${formatMoney(transaction.amount_cents ?? dollarsToCents(transaction.amount))}`}
                   >
                     {deleting === transaction.id ? 'Deleting...' : 'Delete'}
                   </Button>
@@ -103,7 +104,7 @@ export function TransactionList({ transactions, categories, budgetMap, spentMap 
                   <AlertDialogHeader>
                     <AlertDialogTitle>Delete Transaction?</AlertDialogTitle>
                     <AlertDialogDescription>
-                      This will permanently delete the ${transaction.amount.toFixed(2)} transaction
+                      This will permanently delete the {formatMoney(transaction.amount_cents ?? dollarsToCents(transaction.amount))} transaction
                       {transaction.description ? ` for "${transaction.description}"` : ''}.
                       This action cannot be undone.
                     </AlertDialogDescription>

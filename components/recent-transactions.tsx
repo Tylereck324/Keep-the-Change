@@ -2,10 +2,12 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import Link from 'next/link'
+import { formatMoney, dollarsToCents } from '@/lib/utils/money'
 
 interface Transaction {
   id: string
   amount: number
+  amount_cents?: number
   description: string | null
   date: string
   category: {
@@ -94,7 +96,7 @@ export function RecentTransactions({ transactions }: RecentTransactionsProps) {
                       </div>
                     </div>
                     <span className="text-sm font-semibold flex-shrink-0 ml-2">
-                      ${txn.amount.toFixed(2)}
+                      {formatMoney(txn.amount_cents ?? dollarsToCents(txn.amount))}
                     </span>
                   </div>
                 ))}

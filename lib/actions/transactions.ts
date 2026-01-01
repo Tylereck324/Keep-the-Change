@@ -10,6 +10,7 @@ import {
   validateDescription,
   validateMonth,
 } from '@/lib/utils/validators'
+import { dollarsToCents } from '@/lib/utils/money'
 
 // Transaction with joined category data
 export type TransactionWithCategory = Transaction & {
@@ -127,7 +128,7 @@ export async function createTransaction(data: {
       household_id: householdId,
       category_id: data.categoryId || null,
       amount: data.amount,
-      amount_cents: Math.round(data.amount * 100),
+      amount_cents: dollarsToCents(data.amount),
       description: data.description || null,
       date: data.date,
       type: transactionType,
@@ -175,7 +176,7 @@ export async function updateTransaction(
     .update({
       category_id: data.categoryId || null,
       amount: data.amount,
-      amount_cents: Math.round(data.amount * 100),
+      amount_cents: dollarsToCents(data.amount),
       description: data.description || null,
       date: data.date,
       type: transactionType,

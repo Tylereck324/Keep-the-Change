@@ -1,6 +1,6 @@
 'use server'
 
-import { supabase } from '@/lib/supabase'
+import { supabaseAdmin } from '@/lib/supabase-server'
 
 const MAX_ATTEMPTS = 3
 const LOCKOUT_DURATION_MS = 5 * 60 * 1000 // 5 minutes
@@ -26,7 +26,7 @@ export async function checkRateLimit(ip: string): Promise<RateLimitResult> {
     const now = new Date()
 
     // Get existing attempts for this IP
-    const { data: existing } = await supabase
+    const { data: existing } = await supabaseAdmin
         .from('auth_attempts')
         .select('*')
         .eq('ip_address', ip)
@@ -50,7 +50,7 @@ export async function checkRateLimit(ip: string): Promise<RateLimitResult> {
 
     // If lockout expired, reset
     if (lockoutEndsAt && lockoutEndsAt <= now) {
-        await supabase
+        await supabaseAdmin
             .from('auth_attempts')
             .delete()
             .eq('ip_address', ip)
@@ -71,7 +71,7 @@ export async function recordFailedAttempt(ip: string): Promise<void> {
     const now = new Date()
 
     // Get existing attempts
-    const { data: existing } = await supabase
+    const { data: existing } = await supabaseAdmin
         .from('auth_attempts')
         .select('*')
         .eq('ip_address', ip)
@@ -79,7 +79,7 @@ export async function recordFailedAttempt(ip: string): Promise<void> {
 
     if (!existing) {
         // First failed attempt
-        await supabase
+        await supabaseAdmin
             .from('auth_attempts')
             .insert({
                 ip_address: ip,
@@ -100,7 +100,7 @@ export async function recordFailedAttempt(ip: string): Promise<void> {
             updateData.lockout_until = lockoutUntil.toISOString()
         }
 
-        await supabase
+        await supabaseAdmin
             .from('auth_attempts')
             .update(updateData)
             .eq('ip_address', ip)
@@ -111,7 +111,7 @@ export async function recordFailedAttempt(ip: string): Promise<void> {
  * Clear rate limit on successful authentication.
  */
 export async function clearRateLimit(ip: string): Promise<void> {
-    await supabase
+    await supabaseAdmin
         .from('auth_attempts')
         .delete()
         .eq('ip_address', ip)
