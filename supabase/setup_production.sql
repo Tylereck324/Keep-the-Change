@@ -59,3 +59,65 @@ create index if not exists idx_transactions_date on transactions(date);
 create index if not exists idx_monthly_budgets_household_month on monthly_budgets(household_id, month);
 create index if not exists idx_monthly_budgets_category on monthly_budgets(category_id);
 create index if not exists idx_auth_attempts_ip on auth_attempts(ip_address);
+
+-- 5. Helper Tables (CSV Import & Keywords)
+CREATE TABLE IF NOT EXISTS category_keywords (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  household_id UUID NOT NULL REFERENCES households(id) ON DELETE CASCADE,
+  category_id UUID NOT NULL REFERENCES categories(id) ON DELETE CASCADE,
+  keyword TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE(household_id, category_id, keyword)
+);
+
+CREATE TABLE IF NOT EXISTS merchant_patterns (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  household_id UUID NOT NULL REFERENCES households(id) ON DELETE CASCADE,
+  merchant_name TEXT NOT NULL,
+  category_id UUID NOT NULL REFERENCES categories(id) ON DELETE CASCADE,
+  last_used_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE(household_id, merchant_name, category_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_category_keywords_household_keyword ON category_keywords(household_id, keyword);
+CREATE INDEX IF NOT EXISTS idx_merchant_patterns_household_merchant ON merchant_patterns(household_id, merchant_name);
+
+-- 6. Idempotency (Double-Submit Protection)
+CREATE TABLE IF NOT EXISTS idempotency_keys (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  key TEXT NOT NULL UNIQUE,
+  household_id UUID NOT NULL REFERENCES households(id) ON DELETE CASCADE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  expires_at TIMESTAMP WITH TIME ZONE NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_idempotency_keys_key ON idempotency_keys(key);
+CREATE INDEX IF NOT EXISTS idx_idempotency_keys_household ON idempotency_keys(household_id);
+
+CREATE OR REPLACE FUNCTION check_idempotency_key(
+  p_key TEXT,
+  p_household_id UUID,
+  p_ttl_hours INTEGER DEFAULT 24
+)
+RETURNS BOOLEAN AS $$
+DECLARE
+  v_exists BOOLEAN;
+BEGIN
+  DELETE FROM idempotency_keys WHERE expires_at < NOW();
+  
+  SELECT EXISTS(
+    SELECT 1 FROM idempotency_keys 
+    WHERE key = p_key AND household_id = p_household_id
+  ) INTO v_exists;
+  
+  IF v_exists THEN
+    RETURN FALSE;
+  END IF;
+  
+  INSERT INTO idempotency_keys (key, household_id, expires_at)
+  VALUES (p_key, p_household_id, NOW() + (p_ttl_hours || ' hours')::INTERVAL);
+  
+  RETURN TRUE;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+

@@ -164,9 +164,10 @@ export function QuickAddButton({ categories, budgetMap, spentMap }: QuickAddButt
   return (
     <>
       {/* Floating Button */}
+      {/* FAB Button (Mobile/Integrated) */}
       <button
         onClick={() => setOpen(true)}
-        className="fixed bottom-20 right-4 z-40 w-14 h-14 rounded-full bg-primary text-primary-foreground shadow-lg hover:shadow-xl transition-all hover:scale-110 flex items-center justify-center md:bottom-4"
+        className="w-12 h-12 rounded-full bg-primary text-primary-foreground shadow-lg hover:shadow-xl transition-all hover:scale-110 flex items-center justify-center -translate-y-4 border-4 border-background"
         aria-label="Quick add transaction"
       >
         <svg

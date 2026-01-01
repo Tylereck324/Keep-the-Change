@@ -4,13 +4,14 @@ import { revalidatePath } from 'next/cache'
 import { supabaseAdmin } from '@/lib/supabase-server'
 import { getSession } from '@/lib/auth'
 import { Transaction } from '@/lib/types'
-import {
-  validateAmount,
-  validateDate,
-  validateDescription,
-  validateMonth,
-} from '@/lib/utils/validators'
+import { validateDate, validateMonth } from '@/lib/utils/validators'
 import { dollarsToCents } from '@/lib/utils/money'
+import {
+  createTransactionSchema,
+  updateTransactionSchema,
+  CreateTransactionInput,
+  UpdateTransactionInput
+} from '@/lib/schemas/transaction'
 
 // Transaction with joined category data
 export type TransactionWithCategory = Transaction & {
@@ -112,26 +113,32 @@ export async function createTransaction(data: {
   const householdId = await getSession()
   if (!householdId) throw new Error('Not authenticated')
 
-  const transactionType = data.type || 'expense'
+  // Validate using Zod
+  const validated = createTransactionSchema.parse(data)
 
-  // Validate all inputs - category required for expenses only
-  if (transactionType === 'expense' && (!data.categoryId || data.categoryId.trim() === '')) {
-    throw new Error('Category is required for expenses')
+  // Double-submit protection
+  if (validated.idempotencyKey) {
+    const { data: isNew, error: rpcError } = await supabaseAdmin.rpc('check_idempotency_key', {
+      p_key: validated.idempotencyKey,
+      p_household_id: householdId
+    })
+
+    // If key exists (isNew === false), we skip insertion (idempotent success)
+    if (!rpcError && isNew === false) {
+      return
+    }
   }
-  validateAmount(data.amount)
-  validateDate(data.date)
-  validateDescription(data.description)
 
   const { error } = await supabaseAdmin
     .from('transactions')
     .insert({
       household_id: householdId,
-      category_id: data.categoryId || null,
-      amount: data.amount,
-      amount_cents: dollarsToCents(data.amount),
-      description: data.description || null,
-      date: data.date,
-      type: transactionType,
+      category_id: validated.categoryId || null,
+      amount: validated.amount,
+      amount_cents: dollarsToCents(validated.amount),
+      description: validated.description || null,
+      date: validated.date,
+      type: validated.type,
     })
 
   if (error) {
@@ -161,25 +168,17 @@ export async function updateTransaction(
     throw new Error('Transaction ID is required')
   }
 
-  const transactionType = data.type || 'expense'
-
-  // Validate all inputs - category required for expenses only
-  if (transactionType === 'expense' && (!data.categoryId || data.categoryId.trim() === '')) {
-    throw new Error('Category is required for expenses')
-  }
-  validateAmount(data.amount)
-  validateDate(data.date)
-  validateDescription(data.description)
+  const validated = updateTransactionSchema.parse({ ...data, id })
 
   const { error } = await supabaseAdmin
     .from('transactions')
     .update({
-      category_id: data.categoryId || null,
-      amount: data.amount,
-      amount_cents: dollarsToCents(data.amount),
-      description: data.description || null,
-      date: data.date,
-      type: transactionType,
+      category_id: validated.categoryId || null,
+      amount: validated.amount,
+      amount_cents: dollarsToCents(validated.amount),
+      description: validated.description || null,
+      date: validated.date,
+      type: validated.type,
     })
     .eq('id', id)
     .eq('household_id', householdId)

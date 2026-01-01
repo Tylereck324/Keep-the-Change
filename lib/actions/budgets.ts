@@ -7,6 +7,11 @@ import { getAutoRolloverSetting } from '@/lib/actions/settings'
 import { MonthlyBudget } from '@/lib/types'
 import { validateMonth } from '@/lib/utils/validators'
 import { dollarsToCents, centsToDollars } from '@/lib/utils/money'
+import {
+  setBudgetSchema,
+  copyBudgetSchema,
+  SetBudgetInput
+} from '@/lib/schemas/budget'
 
 export async function getMonthlyBudgets(month: string, endMonth?: string): Promise<MonthlyBudget[]> {
   validateMonth(month)
@@ -40,32 +45,23 @@ export async function setBudgetAmount(categoryId: string, month: string, amount:
   const householdId = await getSession()
   if (!householdId) throw new Error('Not authenticated')
 
-  validateMonth(month)
-
-  // Validate amount is non-negative
-  if (amount < 0) {
-    throw new Error('Budget amount cannot be negative')
-  }
-
-  // Validate amount has reasonable maximum (100 million)
-  if (amount > 100_000_000) {
-    throw new Error('Budget amount exceeds maximum allowed value')
-  }
-
-  // Validate amount is a valid number
-  if (!Number.isFinite(amount)) {
-    throw new Error('Budget amount must be a valid number')
-  }
+  // Validate using Zod
+  const validated = setBudgetSchema.parse({
+    categoryId,
+    month,
+    amount
+  })
 
   const { error } = await supabaseAdmin
     .from('monthly_budgets')
     .upsert(
       {
         household_id: householdId,
-        category_id: categoryId,
-        month,
-        budgeted_amount: amount,
-        budgeted_amount_cents: dollarsToCents(amount),
+        categoryId: undefined, // remove undefined property to be safe or just use correct key
+        category_id: validated.categoryId,
+        month: validated.month,
+        budgeted_amount: validated.amount,
+        budgeted_amount_cents: dollarsToCents(validated.amount),
       },
       { onConflict: 'household_id,category_id,month' }
     )
@@ -80,10 +76,12 @@ export async function copyBudgetFromPreviousMonth(currentMonth: string): Promise
   const householdId = await getSession()
   if (!householdId) throw new Error('Not authenticated')
 
-  validateMonth(currentMonth)
+  // Validate using Zod
+  const validated = copyBudgetSchema.parse({ targetMonth: currentMonth })
+  const monthToUse = validated.targetMonth
 
   // Calculate previous month using proper date arithmetic
-  const [yearStr, monthStr] = currentMonth.split('-')
+  const [yearStr, monthStr] = monthToUse.split('-')
   const year = parseInt(yearStr, 10)
   const month = parseInt(monthStr, 10)
 
@@ -114,7 +112,7 @@ export async function copyBudgetFromPreviousMonth(currentMonth: string): Promise
   const newBudgets = prevBudgets.map((b: { category_id: string; budgeted_amount: number; budgeted_amount_cents?: number }) => ({
     household_id: householdId,
     category_id: b.category_id,
-    month: currentMonth,
+    month: monthToUse,
     budgeted_amount: b.budgeted_amount,
     budgeted_amount_cents: b.budgeted_amount_cents ?? dollarsToCents(b.budgeted_amount),
   }))

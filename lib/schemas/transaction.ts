@@ -30,10 +30,7 @@ export const createTransactionSchema = z.object({
     description: z.string()
         .max(100, 'Description must be 100 characters or less')
         .optional(),
-    date: dateString.refine(
-        (val) => val <= new Date().toISOString().split('T')[0],
-        'Date cannot be in the future'
-    ),
+    date: dateString,
     type: z.enum(['income', 'expense']).default('expense'),
     isRefund: z.boolean().optional(),
     idempotencyKey: z.string().optional(),
