@@ -1,17 +1,29 @@
 import bcrypt from 'bcryptjs'
 import { cookies } from 'next/headers'
 import { SignJWT, jwtVerify, JWTPayload } from 'jose'
-import { supabase } from './supabase'
+import { supabaseAdmin } from './supabase-server'
 
 const COOKIE_NAME = 'household_session'
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 30 // 30 days
 
-// Get secret key for JWT signing (falls back to development key if not set)
+/**
+ * Get secret key for JWT signing.
+ * THROWS in production if SESSION_SECRET is not set (P1-1 fix).
+ */
 function getSecretKey(): Uint8Array {
-  const secret = process.env.SESSION_SECRET || 'development-secret-change-in-production'
-  if (process.env.NODE_ENV === 'production' && !process.env.SESSION_SECRET) {
-    console.warn('WARNING: SESSION_SECRET not set in production!')
+  const secret = process.env.SESSION_SECRET
+
+  if (!secret) {
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error(
+        'FATAL: SESSION_SECRET environment variable must be set in production. ' +
+        'Generate a secure random string (e.g., `openssl rand -base64 32`) and add to your environment.'
+      )
+    }
+    // Development fallback only
+    return new TextEncoder().encode('development-only-secret-do-not-use-in-production')
   }
+
   return new TextEncoder().encode(secret)
 }
 
@@ -63,6 +75,18 @@ export async function getSession(): Promise<string | null> {
   }
 }
 
+/**
+ * Helper to require session - throws if not authenticated.
+ * Use this in server actions for consistent auth error handling (P2-1 fix).
+ */
+export async function requireSession(): Promise<string> {
+  const householdId = await getSession()
+  if (!householdId) {
+    throw new Error('Not authenticated')
+  }
+  return householdId
+}
+
 export async function clearSession(): Promise<void> {
   const cookieStore = await cookies()
   cookieStore.delete(COOKIE_NAME)
@@ -72,7 +96,7 @@ export async function getHousehold() {
   const householdId = await getSession()
   if (!householdId) return null
 
-  const { data } = await supabase
+  const { data } = await supabaseAdmin
     .from('households')
     .select('*')
     .eq('id', householdId)
@@ -82,7 +106,7 @@ export async function getHousehold() {
 }
 
 export async function checkHouseholdExists() {
-  const { data } = await supabase
+  const { data } = await supabaseAdmin
     .from('households')
     .select('id')
     .limit(1)
@@ -90,4 +114,3 @@ export async function checkHouseholdExists() {
 
   return !!data
 }
-

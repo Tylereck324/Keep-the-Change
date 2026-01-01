@@ -1,10 +1,69 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+import { supabaseAdmin } from '@/lib/supabase-server'
 import { verifyPin, createSession } from '@/lib/auth'
-import { checkRateLimit, recordFailedAttempt, clearRateLimit } from '@/lib/utils/rate-limit'
 import type { Database } from '@/lib/types'
 
 type HouseholdRow = Database['public']['Tables']['households']['Row']
+
+// Ensure this route is dynamic
+export const dynamic = 'force-dynamic'
+
+/**
+ * Check rate limit using database-backed auth_attempts table.
+ * Works correctly on serverless (Vercel) unlike in-memory rate limiting.
+ */
+async function checkRateLimit(ip: string): Promise<{ blocked: boolean; waitSeconds: number }> {
+  try {
+    const { data, error } = await supabaseAdmin.rpc('check_auth_rate_limit', {
+      p_ip_address: ip,
+    })
+
+    if (error) {
+      console.error('Rate limit check error:', error)
+      // Fail open - allow request but log the error
+      return { blocked: false, waitSeconds: 0 }
+    }
+
+    const result = data?.[0]
+    if (!result) {
+      return { blocked: false, waitSeconds: 0 }
+    }
+
+    return {
+      blocked: result.is_blocked,
+      waitSeconds: result.wait_seconds || 0,
+    }
+  } catch (error) {
+    console.error('Rate limit check exception:', error)
+    return { blocked: false, waitSeconds: 0 }
+  }
+}
+
+/**
+ * Record a failed auth attempt in the database.
+ */
+async function recordFailedAttempt(ip: string): Promise<void> {
+  try {
+    await supabaseAdmin.rpc('record_auth_failure', {
+      p_ip_address: ip,
+    })
+  } catch (error) {
+    console.error('Failed to record auth failure:', error)
+  }
+}
+
+/**
+ * Clear auth attempts on successful login.
+ */
+async function clearAuthAttempts(ip: string): Promise<void> {
+  try {
+    await supabaseAdmin.rpc('clear_auth_attempts', {
+      p_ip_address: ip,
+    })
+  } catch (error) {
+    console.error('Failed to clear auth attempts:', error)
+  }
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -12,12 +71,9 @@ export async function POST(request: NextRequest) {
 
     // Check rate limiting (persistent via Supabase)
     const rateLimit = await checkRateLimit(ip)
-    if (!rateLimit.allowed) {
-      const waitSeconds = rateLimit.lockoutEndsAt
-        ? Math.ceil((rateLimit.lockoutEndsAt.getTime() - Date.now()) / 1000)
-        : 300
+    if (rateLimit.blocked) {
       return NextResponse.json(
-        { error: `Too many attempts. Try again in ${waitSeconds} seconds.` },
+        { error: `Too many attempts. Try again in ${rateLimit.waitSeconds} seconds.` },
         { status: 429 }
       )
     }
@@ -44,7 +100,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get household
-    const { data: household } = await supabase
+    const { data: household } = await supabaseAdmin
       .from('households')
       .select('*')
       .limit(1)
@@ -72,7 +128,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Clear rate limit on success
-    await clearRateLimit(ip)
+    await clearAuthAttempts(ip)
 
     // Create session
     await createSession(householdData.id)

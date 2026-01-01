@@ -1,7 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { supabase } from '@/lib/supabase'
+import { supabaseAdmin } from '@/lib/supabase-server'
 import { getSession } from '@/lib/auth'
 import { getAutoRolloverSetting } from '@/lib/actions/settings'
 import { MonthlyBudget } from '@/lib/types'
@@ -14,7 +14,7 @@ export async function getMonthlyBudgets(month: string, endMonth?: string): Promi
   const householdId = await getSession()
   if (!householdId) return []
 
-  let query = supabase
+  let query = supabaseAdmin
     .from('monthly_budgets')
     .select('*')
     .eq('household_id', householdId)
@@ -56,7 +56,7 @@ export async function setBudgetAmount(categoryId: string, month: string, amount:
     throw new Error('Budget amount must be a valid number')
   }
 
-  const { error } = await supabase
+  const { error } = await supabaseAdmin
     .from('monthly_budgets')
     .upsert(
       {
@@ -64,6 +64,7 @@ export async function setBudgetAmount(categoryId: string, month: string, amount:
         category_id: categoryId,
         month,
         budgeted_amount: amount,
+        budgeted_amount_cents: Math.round(amount * 100),
       },
       { onConflict: 'household_id,category_id,month' }
     )
@@ -94,7 +95,7 @@ export async function copyBudgetFromPreviousMonth(currentMonth: string): Promise
   const prevMonthStr = `${prevYear}-${String(prevMonth).padStart(2, '0')}`
 
   // Get previous month's budgets
-  const { data: prevBudgets, error: fetchError } = await supabase
+  const { data: prevBudgets, error: fetchError } = await supabaseAdmin
     .from('monthly_budgets')
     .select('category_id, budgeted_amount')
     .eq('household_id', householdId)
@@ -114,9 +115,10 @@ export async function copyBudgetFromPreviousMonth(currentMonth: string): Promise
     category_id: b.category_id,
     month: currentMonth,
     budgeted_amount: b.budgeted_amount,
+    budgeted_amount_cents: Math.round(b.budgeted_amount * 100),
   }))
 
-  const { error } = await supabase
+  const { error } = await supabaseAdmin
     .from('monthly_budgets')
     .upsert(newBudgets, { onConflict: 'household_id,category_id,month' })
 
@@ -137,7 +139,7 @@ export async function autoRolloverIfNeeded(month: string): Promise<void> {
   if (!autoRolloverEnabled) return
 
   // Check if current month already has budgets
-  const { data: existingBudgets } = await supabase
+  const { data: existingBudgets } = await supabaseAdmin
     .from('monthly_budgets')
     .select('id')
     .eq('household_id', householdId)

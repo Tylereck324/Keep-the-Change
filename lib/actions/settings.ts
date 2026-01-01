@@ -1,14 +1,14 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { supabase } from '@/lib/supabase'
+import { supabaseAdmin } from '@/lib/supabase-server'
 import { getSession } from '@/lib/auth'
 
 export async function getAutoRolloverSetting(): Promise<boolean> {
   const householdId = await getSession()
   if (!householdId) return false
 
-  const { data } = await supabase
+  const { data } = await supabaseAdmin
     .from('households')
     .select('auto_rollover_budget')
     .eq('id', householdId)
@@ -21,7 +21,7 @@ export async function setAutoRolloverSetting(enabled: boolean): Promise<void> {
   const householdId = await getSession()
   if (!householdId) throw new Error('Not authenticated')
 
-  const { error } = await supabase
+  const { error } = await supabaseAdmin
     .from('households')
     .update({ auto_rollover_budget: enabled })
     .eq('id', householdId)

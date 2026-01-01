@@ -1,7 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { supabase } from '@/lib/supabase'
+import { supabaseAdmin } from '@/lib/supabase-server'
 import { getSession } from '@/lib/auth'
 import type { Category } from '@/lib/types'
 import { validateName, validateColor } from '@/lib/utils/validators'
@@ -10,7 +10,7 @@ export async function getCategories(): Promise<Category[]> {
   const householdId = await getSession()
   if (!householdId) throw new Error('Not authenticated')
 
-  const { data, error } = await supabase
+  const { data, error } = await supabaseAdmin
     .from('categories')
     .select('*')
     .eq('household_id', householdId)
@@ -29,7 +29,7 @@ export async function createCategory(name: string, color: string): Promise<Categ
   validateColor(color)
 
   // Check for duplicate category name (case-insensitive)
-  const { data: existing } = await supabase
+  const { data: existing } = await supabaseAdmin
     .from('categories')
     .select('id')
     .eq('household_id', householdId)
@@ -40,7 +40,7 @@ export async function createCategory(name: string, color: string): Promise<Categ
     throw new Error('A category with this name already exists')
   }
 
-  const { data, error } = await supabase
+  const { data, error } = await supabaseAdmin
     .from('categories')
     .insert({
       household_id: householdId,
@@ -65,7 +65,7 @@ export async function updateCategory(id: string, name: string, color: string): P
   validateColor(color)
 
   // Check for duplicate category name (case-insensitive), excluding current category
-  const { data: existing } = await supabase
+  const { data: existing } = await supabaseAdmin
     .from('categories')
     .select('id')
     .eq('household_id', householdId)
@@ -77,7 +77,7 @@ export async function updateCategory(id: string, name: string, color: string): P
     throw new Error('A category with this name already exists')
   }
 
-  const { error } = await supabase
+  const { error } = await supabaseAdmin
     .from('categories')
     .update({
       name: name.trim(),
@@ -95,7 +95,7 @@ export async function deleteCategory(id: string): Promise<void> {
   const householdId = await getSession()
   if (!householdId) throw new Error('Not authenticated')
 
-  const { error } = await supabase
+  const { error } = await supabaseAdmin
     .from('categories')
     .delete()
     .eq('id', id)

@@ -12,6 +12,7 @@ interface AuthGuardProps {
 
 export function AuthGuard({ householdExists, isAuthenticated, children }: AuthGuardProps) {
   const [showPinModal, setShowPinModal] = useState(false);
+  const [isReady, setIsReady] = useState(false);
   const router = useRouter();
 
   // Determine mode based on household existence
@@ -22,6 +23,8 @@ export function AuthGuard({ householdExists, isAuthenticated, children }: AuthGu
     if (!isAuthenticated) {
       setShowPinModal(true);
     }
+    // Mark as ready after initial check
+    setIsReady(true);
   }, [isAuthenticated]);
 
   const handlePinSuccess = () => {
@@ -29,6 +32,26 @@ export function AuthGuard({ householdExists, isAuthenticated, children }: AuthGu
     // Refresh the page to update server-side session state
     router.refresh();
   };
+
+  // Show loading state until ready (prevents flash of content)
+  if (!isReady) {
+    return (
+      <div className="flex items-center justify-center min-h-[50vh]">
+        <div className="animate-pulse text-muted-foreground">Loading...</div>
+      </div>
+    );
+  }
+
+  // Don't render children until authenticated
+  if (!isAuthenticated) {
+    return (
+      <PinModal
+        open={showPinModal}
+        mode={mode}
+        onSuccess={handlePinSuccess}
+      />
+    );
+  }
 
   return (
     <>

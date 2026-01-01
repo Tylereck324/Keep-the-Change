@@ -42,7 +42,7 @@ export const CategoryBreakdownChart = memo(function CategoryBreakdownChart({ dat
                 borderRadius: '8px',
                 color: 'hsl(var(--popover-foreground))',
               }}
-              formatter={(value: number | undefined) => value !== undefined ? `$${value.toFixed(2)}` : '$0.00'}
+              formatter={(value) => value !== undefined ? `$${Number(value).toFixed(2)}` : '$0.00'}
             />
             <Legend wrapperStyle={{ color: 'hsl(var(--foreground))' }} />
             <Bar dataKey="budgeted" fill="#9ca3af" name="Budgeted" />

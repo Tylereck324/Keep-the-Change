@@ -136,6 +136,38 @@ export type Database = {
         }
         Relationships: []
       }
+      idempotency_keys: {
+        Row: {
+          created_at: string | null
+          expires_at: string
+          household_id: string
+          id: string
+          key: string
+        }
+        Insert: {
+          created_at?: string | null
+          expires_at: string
+          household_id: string
+          id?: string
+          key: string
+        }
+        Update: {
+          created_at?: string | null
+          expires_at?: string
+          household_id?: string
+          id?: string
+          key?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "idempotency_keys_household_id_fkey"
+            columns: ["household_id"]
+            isOneToOne: false
+            referencedRelation: "households"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       merchant_patterns: {
         Row: {
           category_id: string
@@ -178,6 +210,7 @@ export type Database = {
       monthly_budgets: {
         Row: {
           budgeted_amount: number
+          budgeted_amount_cents: number
           category_id: string
           created_at: string | null
           household_id: string
@@ -186,6 +219,7 @@ export type Database = {
         }
         Insert: {
           budgeted_amount?: number
+          budgeted_amount_cents: number
           category_id: string
           created_at?: string | null
           household_id: string
@@ -194,6 +228,7 @@ export type Database = {
         }
         Update: {
           budgeted_amount?: number
+          budgeted_amount_cents?: number
           category_id?: string
           created_at?: string | null
           household_id?: string
@@ -220,6 +255,7 @@ export type Database = {
       transactions: {
         Row: {
           amount: number
+          amount_cents: number
           category_id: string | null
           created_at: string | null
           date: string
@@ -230,6 +266,7 @@ export type Database = {
         }
         Insert: {
           amount: number
+          amount_cents: number
           category_id?: string | null
           created_at?: string | null
           date?: string
@@ -240,6 +277,7 @@ export type Database = {
         }
         Update: {
           amount?: number
+          amount_cents?: number
           category_id?: string | null
           created_at?: string | null
           date?: string
@@ -273,6 +311,31 @@ export type Database = {
       bulk_import_transactions: {
         Args: { p_household_id: string; p_transactions: Json }
         Returns: Json
+      }
+      check_auth_rate_limit: {
+        Args: { p_ip_address: string }
+        Returns: {
+          current_count: number
+          is_blocked: boolean
+          wait_seconds: number
+        }[]
+      }
+      check_idempotency_key: {
+        Args: { p_household_id: string; p_key: string; p_ttl_hours?: number }
+        Returns: boolean
+      }
+      cleanup_expired_idempotency_keys: { Args: never; Returns: number }
+      cleanup_old_auth_attempts: { Args: never; Returns: number }
+      clear_auth_attempts: {
+        Args: { p_ip_address: string }
+        Returns: undefined
+      }
+      record_auth_failure: {
+        Args: { p_ip_address: string }
+        Returns: {
+          lockout_seconds: number
+          new_count: number
+        }[]
       }
     }
     Enums: {

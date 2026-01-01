@@ -1,7 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { supabase } from '@/lib/supabase'
+import { supabaseAdmin } from '@/lib/supabase-server'
 import { getSession } from '@/lib/auth'
 import type { CategoryKeyword } from '@/lib/types'
 
@@ -28,7 +28,7 @@ export async function getKeywordsByCategory(categoryId: string): Promise<Categor
     throw new Error('Category ID is required')
   }
 
-  const { data, error } = await supabase
+  const { data, error } = await supabaseAdmin
     .from('category_keywords')
     .select('*')
     .eq('household_id', householdId)
@@ -49,7 +49,7 @@ export async function getAllKeywords(): Promise<Record<string, CategoryKeyword[]
   const householdId = await getSession()
   if (!householdId) throw new Error('Not authenticated')
 
-  const { data, error } = await supabase
+  const { data, error } = await supabaseAdmin
     .from('category_keywords')
     .select('*')
     .eq('household_id', householdId)
@@ -91,7 +91,7 @@ export async function addKeyword(categoryId: string, keyword: string): Promise<C
   const normalizedKeyword = keyword.trim().toLowerCase()
 
   // Check for duplicates
-  const { data: existing } = await supabase
+  const { data: existing } = await supabaseAdmin
     .from('category_keywords')
     .select('id')
     .eq('household_id', householdId)
@@ -104,7 +104,7 @@ export async function addKeyword(categoryId: string, keyword: string): Promise<C
   }
 
   // Insert the keyword
-  const { data, error } = await supabase
+  const { data, error } = await supabaseAdmin
     .from('category_keywords')
     .insert({
       household_id: householdId,
@@ -133,7 +133,7 @@ export async function deleteKeyword(keywordId: string): Promise<void> {
     throw new Error('Keyword ID is required')
   }
 
-  const { error } = await supabase
+  const { error } = await supabaseAdmin
     .from('category_keywords')
     .delete()
     .eq('id', keywordId)

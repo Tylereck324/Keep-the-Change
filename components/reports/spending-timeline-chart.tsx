@@ -43,7 +43,7 @@ export const SpendingTimelineChart = memo(function SpendingTimelineChart({ data 
                 borderRadius: '8px',
                 color: 'hsl(var(--popover-foreground))',
               }}
-              formatter={(value: number | undefined) => value !== undefined ? [`$${value.toFixed(2)}`, 'Spent'] : ['$0.00', 'Spent']}
+              formatter={(value) => value !== undefined ? [`$${Number(value).toFixed(2)}`, 'Spent'] : ['$0.00', 'Spent']}
             />
             <Line
               type="monotone"

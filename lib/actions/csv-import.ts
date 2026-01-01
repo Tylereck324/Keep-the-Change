@@ -1,7 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { supabase } from '@/lib/supabase'
+import { supabaseAdmin } from '@/lib/supabase-server'
 import { getSession } from '@/lib/auth'
 import type { Database } from '@/lib/types'
 
@@ -108,7 +108,7 @@ export async function bulkImportTransactions(
 
   // Call atomic RPC function
   try {
-    const { data, error } = await supabase.rpc('bulk_import_transactions', {
+    const { data, error } = await supabaseAdmin.rpc('bulk_import_transactions', {
       p_household_id: householdId,
       p_transactions: validTransactions,
     })
@@ -169,7 +169,7 @@ export async function getMerchantPatterns() {
   const householdId = await getSession()
   if (!householdId) return []
 
-  const { data, error } = await supabase
+  const { data, error } = await supabaseAdmin
     .from('merchant_patterns')
     .select('*')
     .eq('household_id', householdId)
@@ -214,7 +214,7 @@ export async function learnMerchantPattern(
   }
 
   // Upsert: insert new pattern or update last_used_at if exists
-  const { error } = await supabase
+  const { error } = await supabaseAdmin
     .from('merchant_patterns')
     .upsert(patternData, {
       onConflict: 'household_id,merchant_name,category_id',

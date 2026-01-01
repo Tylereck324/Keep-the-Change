@@ -1,7 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { supabase } from '@/lib/supabase'
+import { supabaseAdmin } from '@/lib/supabase-server'
 import { getSession } from '@/lib/auth'
 import { Transaction } from '@/lib/types'
 import {
@@ -39,7 +39,7 @@ export async function getTransactions(filters?: {
     validateDate(filters.endDate)
   }
 
-  let query = supabase
+  let query = supabaseAdmin
     .from('transactions')
     .select('*, category:categories(id, name, color)')
     .eq('household_id', householdId)
@@ -85,7 +85,7 @@ export async function getTransactionsByMonth(month: string): Promise<Transaction
   const lastDay = new Date(year, monthNum, 0).getDate()
   const endDate = `${month}-${String(lastDay).padStart(2, '0')}`
 
-  const { data, error } = await supabase
+  const { data, error } = await supabaseAdmin
     .from('transactions')
     .select('*, category:categories(id, name, color)')
     .eq('household_id', householdId)
@@ -121,12 +121,13 @@ export async function createTransaction(data: {
   validateDate(data.date)
   validateDescription(data.description)
 
-  const { error } = await supabase
+  const { error } = await supabaseAdmin
     .from('transactions')
     .insert({
       household_id: householdId,
       category_id: data.categoryId || null,
       amount: data.amount,
+      amount_cents: Math.round(data.amount * 100),
       description: data.description || null,
       date: data.date,
       type: transactionType,
@@ -169,11 +170,12 @@ export async function updateTransaction(
   validateDate(data.date)
   validateDescription(data.description)
 
-  const { error } = await supabase
+  const { error } = await supabaseAdmin
     .from('transactions')
     .update({
       category_id: data.categoryId || null,
       amount: data.amount,
+      amount_cents: Math.round(data.amount * 100),
       description: data.description || null,
       date: data.date,
       type: transactionType,
@@ -199,7 +201,7 @@ export async function deleteTransaction(id: string): Promise<void> {
     throw new Error('Transaction ID is required')
   }
 
-  const { error } = await supabase
+  const { error } = await supabaseAdmin
     .from('transactions')
     .delete()
     .eq('id', id)

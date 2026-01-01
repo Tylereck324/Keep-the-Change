@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+import { supabaseAdmin } from '@/lib/supabase-server'
 import { hashPin, createSession } from '@/lib/auth'
 import type { Database } from '@/lib/types'
 
 type HouseholdRow = Database['public']['Tables']['households']['Row']
 type HouseholdInsert = Database['public']['Tables']['households']['Insert']
+
+// Ensure this route is dynamic
+export const dynamic = 'force-dynamic'
 
 export async function POST(request: NextRequest) {
   try {
@@ -30,7 +33,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if household already exists
-    const { data: existing } = await supabase
+    const { data: existing } = await supabaseAdmin
       .from('households')
       .select('id')
       .limit(1)
@@ -45,13 +48,12 @@ export async function POST(request: NextRequest) {
 
     // Create household with hashed PIN
     const pinHash = await hashPin(pin)
-    const { data: household, error } = await supabase
+    const { data: household, error } = await supabaseAdmin
       .from('households')
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .insert({
         name: 'My Household',
-        pin_hash: pinHash
-      } as any)
+        pin_hash: pinHash,
+      })
       .select()
       .single()
 

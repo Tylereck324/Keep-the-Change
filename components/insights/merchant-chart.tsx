@@ -57,7 +57,7 @@ export const MerchantChart = memo(function MerchantChart({ data }: MerchantChart
               }}
               labelStyle={{ color: 'var(--card-foreground)' }}
               itemStyle={{ color: 'var(--card-foreground)' }}
-              formatter={(value: number | undefined) => value !== undefined ? [`$${value.toFixed(2)}`, 'Total Spent'] : ['$0.00', 'Total Spent']}
+              formatter={(value) => value !== undefined ? [`$${Number(value).toFixed(2)}`, 'Total Spent'] : ['$0.00', 'Total Spent']}
               labelFormatter={(label, payload) => {
                 if (payload && payload[0]) {
                   return payload[0].payload.fullName
