@@ -1,10 +1,17 @@
 import type { CategoryKeyword, MerchantPattern } from '@/lib/types'
 
+/** How a category was matched to a transaction */
 export type MatchType = 'keyword' | 'historical' | 'none'
 
+/**
+ * Result of matching a transaction to a category.
+ */
 export type CategoryMatch = {
+  /** Matched category ID, or null if no match */
   categoryId: string | null
+  /** How the match was found */
   matchType: MatchType
+  /** Confidence level: high (keyword), medium (historical), low (none) */
   confidence: 'high' | 'medium' | 'low'
 }
 
@@ -69,7 +76,25 @@ function matchByHistory(
 }
 
 /**
- * Match a transaction to a category using both keyword and historical approaches
+ * Match a transaction description to a category.
+ *
+ * Matching priority:
+ * 1. Keyword match (high confidence) - checks if description contains any configured keyword
+ * 2. Historical match (medium confidence) - checks merchant patterns from past categorizations
+ * 3. No match (low confidence) - returns null categoryId
+ *
+ * @param description - Transaction description to match
+ * @param keywordsByCategory - Map of category IDs to their keywords
+ * @param merchantPatterns - Historical merchant-to-category patterns
+ * @returns Match result with categoryId, matchType, and confidence
+ *
+ * @example
+ * ```typescript
+ * const match = matchCategory('WALMART GROCERY', keywords, patterns)
+ * if (match.categoryId) {
+ *   console.log(`Matched to ${match.categoryId} via ${match.matchType}`)
+ * }
+ * ```
  */
 export function matchCategory(
   description: string,
@@ -105,7 +130,12 @@ export function matchCategory(
 }
 
 /**
- * Batch match multiple transactions
+ * Batch match multiple transactions to categories.
+ *
+ * @param transactions - Array of objects with description property
+ * @param keywordsByCategory - Map of category IDs to their keywords
+ * @param merchantPatterns - Historical merchant-to-category patterns
+ * @returns Array of match results in same order as input transactions
  */
 export function matchCategories(
   transactions: Array<{ description: string }>,
