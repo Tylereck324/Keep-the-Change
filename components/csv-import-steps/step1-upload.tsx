@@ -16,36 +16,7 @@ export function Step1Upload({ onComplete }: Step1UploadProps) {
   const [error, setError] = useState<string | null>(null)
   const [parsing, setParsing] = useState(false)
 
-  const handleDragOver = useCallback((e: React.DragEvent) => {
-    e.preventDefault()
-    setIsDragging(true)
-  }, [])
-
-  const handleDragLeave = useCallback((e: React.DragEvent) => {
-    e.preventDefault()
-    setIsDragging(false)
-  }, [])
-
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault()
-    setIsDragging(false)
-    setError(null)
-
-    const droppedFile = e.dataTransfer.files[0]
-    if (droppedFile) {
-      processFile(droppedFile)
-    }
-  }, [])
-
-  const handleFileInput = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setError(null)
-    const selectedFile = e.target.files?.[0]
-    if (selectedFile) {
-      processFile(selectedFile)
-    }
-  }, [])
-
-  const processFile = async (selectedFile: File) => {
+  const processFile = useCallback(async (selectedFile: File) => {
     // Validate file
     const validation = validateCSVFile(selectedFile)
     if (!validation.valid) {
@@ -77,7 +48,36 @@ export function Step1Upload({ onComplete }: Step1UploadProps) {
       setError(err instanceof Error ? err.message : 'Failed to parse CSV')
       setParsing(false)
     }
-  }
+  }, [onComplete])
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    setIsDragging(true)
+  }, [])
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    setIsDragging(false)
+  }, [])
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    setIsDragging(false)
+    setError(null)
+
+    const droppedFile = e.dataTransfer.files[0]
+    if (droppedFile) {
+      processFile(droppedFile)
+    }
+  }, [processFile])
+
+  const handleFileInput = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setError(null)
+    const selectedFile = e.target.files?.[0]
+    if (selectedFile) {
+      processFile(selectedFile)
+    }
+  }, [processFile])
 
   return (
     <div className="space-y-6">

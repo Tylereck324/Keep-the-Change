@@ -1,19 +1,12 @@
 'use client'
 
 import { useTheme } from 'next-themes'
-import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 
 export function ThemeToggle() {
-  const { theme, setTheme, resolvedTheme } = useTheme()
-  const [mounted, setMounted] = useState(false)
+  const { setTheme, resolvedTheme } = useTheme()
 
-  // Avoid hydration mismatch
-  useEffect(() => {
-    setMounted(true)
-  }, [])
-
-  if (!mounted) {
+  if (!resolvedTheme) {
     return (
       <div className="flex items-center gap-4">
         <span className="text-sm text-muted-foreground">Loading...</span>

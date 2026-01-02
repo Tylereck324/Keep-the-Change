@@ -86,7 +86,9 @@ export function CategoryCard({ category, budget, spent }: CategoryCardProps) {
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
-                  <AlertDialogTitle>Delete "{category.name}"?</AlertDialogTitle>
+                  <AlertDialogTitle>
+                    Delete &quot;{category.name}&quot;?
+                  </AlertDialogTitle>
                   <AlertDialogDescription>
                     Any transactions using this category will become uncategorized.
                     This action cannot be undone.

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -21,21 +21,21 @@ export function Step3Duplicates({
   onComplete,
   onBack,
 }: Step3DuplicatesProps) {
-  const [duplicates, setDuplicates] = useState<DuplicateMatch[]>([])
   const [decisions, setDecisions] = useState<Record<number, 'skip' | 'import'>>({})
   const [rememberChoice, setRememberChoice] = useState<'skip' | 'import' | null>(null)
   const [currentIndex, setCurrentIndex] = useState(0)
 
-  // Find duplicates on mount
-  useEffect(() => {
-    const found = findDuplicates(transactions, existingTransactions)
-    setDuplicates(found)
+  const duplicates = useMemo(
+    () => findDuplicates(transactions, existingTransactions),
+    [transactions, existingTransactions]
+  )
 
-    // Auto-skip this step if no duplicates
-    if (found.length === 0) {
+  // Auto-skip this step if no duplicates
+  useEffect(() => {
+    if (duplicates.length === 0) {
       onComplete(transactions)
     }
-  }, [transactions, existingTransactions])
+  }, [duplicates.length, onComplete, transactions])
 
   const currentDuplicate = duplicates[currentIndex]
   const currentTransaction = currentDuplicate

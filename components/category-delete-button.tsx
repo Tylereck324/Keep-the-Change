@@ -50,7 +50,9 @@ export function CategoryDeleteButton({ categoryId, categoryName }: CategoryDelet
             </AlertDialogTrigger>
             <AlertDialogContent>
                 <AlertDialogHeader>
-                    <AlertDialogTitle>Delete "{categoryName}"?</AlertDialogTitle>
+                    <AlertDialogTitle>
+                        Delete &quot;{categoryName}&quot;?
+                    </AlertDialogTitle>
                     <AlertDialogDescription>
                         Any transactions using this category will become uncategorized.
                         This action cannot be undone.

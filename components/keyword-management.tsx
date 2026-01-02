@@ -151,7 +151,7 @@ export function KeywordManagement({
         <ul className="list-disc list-inside space-y-1">
           <li>Keywords are matched case-insensitively against transaction descriptions</li>
           <li>Add common merchants, stores, or description patterns</li>
-          <li>Examples: "starbucks", "amazon", "gas", "grocery"</li>
+          <li>Examples: &quot;starbucks&quot;, &quot;amazon&quot;, &quot;gas&quot;, &quot;grocery&quot;</li>
           <li>Keywords help auto-categorize imported transactions</li>
         </ul>
       </div>

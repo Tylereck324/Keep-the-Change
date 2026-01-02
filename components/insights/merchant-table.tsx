@@ -43,8 +43,10 @@ export function MerchantTable({ data }: MerchantTableProps) {
     return sortOrder === 'asc' ? comparison : -comparison
   })
 
-  const SortIcon = ({ column }: { column: SortKey }) => {
-    if (sortKey !== column) return <span className="text-muted-foreground ml-1">↕</span>
+  const renderSortIcon = (column: SortKey) => {
+    if (sortKey !== column) {
+      return <span className="text-muted-foreground ml-1">↕</span>
+    }
     return <span className="ml-1">{sortOrder === 'asc' ? '↑' : '↓'}</span>
   }
 
@@ -62,25 +64,25 @@ export function MerchantTable({ data }: MerchantTableProps) {
                   className="text-left py-2 px-2 cursor-pointer hover:bg-muted font-semibold"
                   onClick={() => handleSort('displayName')}
                 >
-                  Merchant<SortIcon column="displayName" />
+                  Merchant{renderSortIcon('displayName')}
                 </th>
                 <th
                   className="text-right py-2 px-2 cursor-pointer hover:bg-muted font-semibold"
                   onClick={() => handleSort('totalSpent')}
                 >
-                  Total Spent<SortIcon column="totalSpent" />
+                  Total Spent{renderSortIcon('totalSpent')}
                 </th>
                 <th
                   className="text-right py-2 px-2 cursor-pointer hover:bg-muted font-semibold"
                   onClick={() => handleSort('transactionCount')}
                 >
-                  Transactions<SortIcon column="transactionCount" />
+                  Transactions{renderSortIcon('transactionCount')}
                 </th>
                 <th
                   className="text-right py-2 px-2 cursor-pointer hover:bg-muted font-semibold"
                   onClick={() => handleSort('averageAmount')}
                 >
-                  Avg Amount<SortIcon column="averageAmount" />
+                  Avg Amount{renderSortIcon('averageAmount')}
                 </th>
                 <th className="text-left py-2 px-2 font-semibold">Category</th>
               </tr>

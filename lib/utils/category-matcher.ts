@@ -41,7 +41,7 @@ function matchByKeyword(
  */
 function extractMerchantName(description: string): string {
   // Remove common payment processors
-  let cleaned = description.replace(/^(PAYPAL \*|KLARNA\*|DD \*)/i, '')
+  const cleaned = description.replace(/^(PAYPAL \*|KLARNA\*|DD \*)/i, '')
 
   // Take first part before common separators
   const parts = cleaned.split(/[\s-]+/)

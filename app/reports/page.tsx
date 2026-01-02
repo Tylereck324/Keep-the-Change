@@ -108,7 +108,7 @@ export default async function ReportsPage() {
             </div>
             {forecast.projectedOverUnder < 0 && (
               <p className="text-sm text-destructive mt-2">
-                ⚠️ Warning: At this rate, you'll exceed your budget by ${Math.abs(forecast.projectedOverUnder).toFixed(2)}
+                ⚠️ Warning: At this rate, you&apos;ll exceed your budget by ${Math.abs(forecast.projectedOverUnder).toFixed(2)}
               </p>
             )}
             {forecast.projectedOverUnder > 0 && (
