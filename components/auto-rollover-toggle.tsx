@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { toast } from 'sonner'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { getAutoRolloverSetting, setAutoRolloverSetting } from '@/lib/actions/settings'
@@ -20,10 +21,10 @@ export function AutoRolloverToggle() {
     setEnabled(checked)
     try {
       await setAutoRolloverSetting(checked)
-    } catch (error) {
-      // Revert on error
+    } catch {
+      // Revert on error and notify user
       setEnabled(!checked)
-      console.error('Failed to update auto-rollover setting:', error)
+      toast.error('Failed to update setting. Please try again.')
     }
   }
 

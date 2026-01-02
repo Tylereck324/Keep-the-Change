@@ -1,15 +1,28 @@
 import Papa from 'papaparse'
 
+/**
+ * A successfully parsed transaction from CSV import.
+ */
 export type ParsedTransaction = {
-  date: string // YYYY-MM-DD
-  amount: number // positive number
+  /** Transaction date in YYYY-MM-DD format */
+  date: string
+  /** Transaction amount as a positive number */
+  amount: number
+  /** Transaction description/merchant name */
   description: string
-  rowNumber: number // for error reporting
+  /** Original row number in CSV (1-indexed, including header) */
+  rowNumber: number
 }
 
+/**
+ * Result of parsing a CSV file.
+ */
 export type ParseResult = {
+  /** Successfully parsed transactions */
   transactions: ParsedTransaction[]
+  /** Errors encountered during parsing, with row numbers */
   errors: Array<{ rowNumber: number; message: string }>
+  /** Summary counts */
   summary: {
     total: number
     success: number
@@ -18,8 +31,24 @@ export type ParseResult = {
 }
 
 /**
- * Parse Ally Bank CSV format
- * Expected columns: Date, Time, Amount, Type, Description
+ * Parse a bank CSV file into transactions.
+ *
+ * Expected CSV format with headers: Date, Amount, Description
+ * - Date must be in YYYY-MM-DD format
+ * - Amount can be positive or negative (will be converted to positive)
+ * - Description is required and limited to 100 characters
+ *
+ * @param fileContent - Raw CSV file content as string
+ * @returns Parsed transactions, errors, and summary counts
+ * @throws Error if required columns are missing
+ *
+ * @example
+ * ```typescript
+ * const csv = `Date,Amount,Description
+ * 2024-01-15,50.00,GROCERY STORE`
+ * const result = parseAllyBankCSV(csv)
+ * // result.transactions[0] = { date: '2024-01-15', amount: 50, description: 'GROCERY STORE', rowNumber: 2 }
+ * ```
  */
 export function parseAllyBankCSV(fileContent: string): ParseResult {
   const transactions: ParsedTransaction[] = []
@@ -105,7 +134,23 @@ export function parseAllyBankCSV(fileContent: string): ParseResult {
 }
 
 /**
- * Validate file before parsing
+ * Validate a file before CSV parsing.
+ *
+ * Checks:
+ * - File extension is .csv
+ * - File size is under 5MB
+ * - File is not empty
+ *
+ * @param file - The File object to validate
+ * @returns Object with `valid` boolean and optional `error` message
+ *
+ * @example
+ * ```typescript
+ * const validation = validateCSVFile(file)
+ * if (!validation.valid) {
+ *   alert(validation.error)
+ * }
+ * ```
  */
 export function validateCSVFile(file: File): { valid: boolean; error?: string } {
   // Check file type

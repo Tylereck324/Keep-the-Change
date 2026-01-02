@@ -10,7 +10,7 @@ import { RecentTransactions } from './recent-transactions'
 import { CategoryForm } from './category-form'
 import { getCurrentMonth } from '@/lib/utils/date'
 import { isIncomeTransaction } from '@/lib/utils/transaction-helpers'
-import { formatMoney, dollarsToCents, addCents } from '@/lib/utils/money'
+import { formatMoney, dollarsToCents } from '@/lib/utils/money'
 
 export async function Dashboard() {
   const currentMonth = getCurrentMonth()
