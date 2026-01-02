@@ -57,7 +57,6 @@ export function PinModal({ open, mode, onSuccess }: PinModalProps) {
         const errorMessage = data.details
           ? `${data.error}: ${data.details}`
           : data.error || 'Something went wrong'
-        console.error('Setup error details:', data)
         setError(errorMessage)
         return
       }
