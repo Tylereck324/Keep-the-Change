@@ -4,7 +4,7 @@ import { getMerchantInsights, getRecurringCharges } from '@/lib/actions/insights
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { MerchantTable } from '@/components/insights/merchant-table'
-import { MerchantChart } from '@/components/insights/merchant-chart'
+import { MerchantChartSection } from '@/components/insights/merchant-chart-section'
 import { RecurringCard } from '@/components/insights/recurring-card'
 import Link from 'next/link'
 
@@ -81,7 +81,7 @@ export default async function InsightsPage() {
       {/* Top Merchants Chart */}
       {merchantInsights.length > 0 && (
         <div className="mb-6">
-          <MerchantChart data={merchantInsights.slice(0, 10)} />
+          <MerchantChartSection data={merchantInsights.slice(0, 10)} />
         </div>
       )}
 
