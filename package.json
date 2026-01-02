@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest",
+    "test:ci": "vitest run --maxWorkers=4",
     "prepare": "husky"
   },
   "dependencies": {
