@@ -4,9 +4,16 @@ import { getMerchantInsights, getRecurringCharges } from '@/lib/actions/insights
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { MerchantTable } from '@/components/insights/merchant-table'
-import { MerchantChart } from '@/components/insights/merchant-chart'
+import dynamic from 'next/dynamic'
+import { LazyMount } from '@/components/lazy-mount'
+import { ChartSkeleton } from '@/components/chart-skeleton'
 import { RecurringCard } from '@/components/insights/recurring-card'
 import Link from 'next/link'
+
+const MerchantChart = dynamic(
+  () => import('@/components/insights/merchant-chart').then((m) => m.MerchantChart),
+  { ssr: false, loading: () => <ChartSkeleton height={350} /> }
+)
 
 export default async function InsightsPage() {
   const session = await getSession()
@@ -81,7 +88,9 @@ export default async function InsightsPage() {
       {/* Top Merchants Chart */}
       {merchantInsights.length > 0 && (
         <div className="mb-6">
-          <MerchantChart data={merchantInsights.slice(0, 10)} />
+          <LazyMount fallback={<ChartSkeleton height={350} />}>
+            <MerchantChart data={merchantInsights.slice(0, 10)} />
+          </LazyMount>
         </div>
       )}
 

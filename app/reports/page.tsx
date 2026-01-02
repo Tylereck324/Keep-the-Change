@@ -3,11 +3,24 @@ import { redirect } from 'next/navigation'
 import { getMonthlyReport, getMultiMonthTrend, getForecast, getYearSummary } from '@/lib/actions/reports'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { SpendingTimelineChart } from '@/components/reports/spending-timeline-chart'
-import { CategoryBreakdownChart } from '@/components/reports/category-breakdown-chart'
-import { TrendChart } from '@/components/reports/trend-chart'
+import dynamic from 'next/dynamic'
+import { LazyMount } from '@/components/lazy-mount'
+import { ChartSkeleton } from '@/components/chart-skeleton'
 import Link from 'next/link'
 import { getCurrentMonth, getLastNMonths } from '@/lib/utils/date'
+
+const SpendingTimelineChart = dynamic(
+  () => import('@/components/reports/spending-timeline-chart').then((m) => m.SpendingTimelineChart),
+  { ssr: false, loading: () => <ChartSkeleton height={300} /> }
+)
+const CategoryBreakdownChart = dynamic(
+  () => import('@/components/reports/category-breakdown-chart').then((m) => m.CategoryBreakdownChart),
+  { ssr: false, loading: () => <ChartSkeleton height={300} /> }
+)
+const TrendChart = dynamic(
+  () => import('@/components/reports/trend-chart').then((m) => m.TrendChart),
+  { ssr: false, loading: () => <ChartSkeleton height={300} /> }
+)
 
 export default async function ReportsPage() {
   const session = await getSession()
@@ -122,12 +135,18 @@ export default async function ReportsPage() {
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        <SpendingTimelineChart data={monthlyReport.transactionsByDay} />
-        <CategoryBreakdownChart data={monthlyReport.categories} />
+        <LazyMount fallback={<ChartSkeleton height={300} />}>
+          <SpendingTimelineChart data={monthlyReport.transactionsByDay} />
+        </LazyMount>
+        <LazyMount fallback={<ChartSkeleton height={300} />}>
+          <CategoryBreakdownChart data={monthlyReport.categories} />
+        </LazyMount>
       </div>
 
       <div className="mb-6">
-        <TrendChart data={trendData} />
+        <LazyMount fallback={<ChartSkeleton height={300} />}>
+          <TrendChart data={trendData} />
+        </LazyMount>
       </div>
 
       {/* Category Details Table */}
