@@ -25,10 +25,26 @@ interface TransactionListProps {
   categories: Category[]
   budgetMap?: Record<string, number>
   spentMap?: Record<string, number>
+  initialVisibleCount?: number
+  pageSize?: number
 }
 
-export function TransactionList({ transactions, categories, budgetMap, spentMap }: TransactionListProps) {
+const DEFAULT_INITIAL_VISIBLE = 50
+const DEFAULT_PAGE_SIZE = 50
+
+export function TransactionList({
+  transactions,
+  categories,
+  budgetMap,
+  spentMap,
+  initialVisibleCount = DEFAULT_INITIAL_VISIBLE,
+  pageSize = DEFAULT_PAGE_SIZE,
+}: TransactionListProps) {
   const [deleting, setDeleting] = useState<string | null>(null)
+  const [visibleCount, setVisibleCount] = useState(initialVisibleCount)
+
+  const visibleTransactions = transactions.slice(0, visibleCount)
+  const hasMore = transactions.length > visibleCount
 
   const handleDelete = async (id: string) => {
     setDeleting(id)
@@ -53,8 +69,8 @@ export function TransactionList({ transactions, categories, budgetMap, spentMap 
 
   return (
     <div className="space-y-2">
-      {transactions.map((transaction) => (
-        <Card key={transaction.id}>
+      {visibleTransactions.map((transaction) => (
+        <Card key={transaction.id} data-testid="transaction-row">
           <CardContent className="flex items-center justify-between py-4 px-4">
             <div className="flex items-center gap-3">
               <div
@@ -124,6 +140,17 @@ export function TransactionList({ transactions, categories, budgetMap, spentMap 
           </CardContent>
         </Card>
       ))}
+
+      {hasMore && (
+        <div className="pt-2 flex justify-center">
+          <Button
+            variant="outline"
+            onClick={() => setVisibleCount((count) => Math.min(count + pageSize, transactions.length))}
+          >
+            Load more
+          </Button>
+        </div>
+      )}
     </div>
   )
 }
