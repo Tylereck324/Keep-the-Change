@@ -1,17 +1,23 @@
-import { distance } from 'fuzzball'
+import { ratio } from 'fuzzball'
 import type { Transaction } from '@/lib/types'
 
+/**
+ * Information about a detected duplicate transaction.
+ */
 export type DuplicateMatch = {
-  importIndex: number // index in import array
+  /** Index of the transaction in the import array */
+  importIndex: number
+  /** The existing transaction that this is a duplicate of */
   existingTransaction: Transaction
-  similarity: number // 0-100
+  /** Similarity score 0-100 (100 = identical descriptions) */
+  similarity: number
 }
 
 /**
- * Calculate similarity between two descriptions using Levenshtein distance
+ * Calculate similarity between two descriptions (0-100 percentage)
  */
 function calculateSimilarity(desc1: string, desc2: string): number {
-  return distance(desc1.toLowerCase(), desc2.toLowerCase())
+  return ratio(desc1.toLowerCase(), desc2.toLowerCase())
 }
 
 /**
@@ -46,7 +52,24 @@ function isPotentialDuplicate(
 }
 
 /**
- * Find potential duplicates for a batch of transactions
+ * Find potential duplicates in a batch of transactions.
+ *
+ * A transaction is considered a duplicate if it has:
+ * - Same date as an existing transaction
+ * - Same amount (within $0.01 tolerance)
+ * - Similar description (default 80% similarity threshold)
+ *
+ * @param newTransactions - Transactions to check for duplicates
+ * @param existingTransactions - Existing transactions to compare against
+ * @param similarityThreshold - Minimum description similarity (0-100), default 80
+ * @returns Array of duplicate matches found
+ *
+ * @example
+ * ```typescript
+ * const duplicates = findDuplicates(importedTxns, existingTxns)
+ * const duplicateIndices = new Set(duplicates.map(d => d.importIndex))
+ * const uniqueTxns = importedTxns.filter((_, i) => !duplicateIndices.has(i))
+ * ```
  */
 export function findDuplicates(
   newTransactions: Array<{ date: string; amount: number; description: string }>,
@@ -80,7 +103,11 @@ export function findDuplicates(
 }
 
 /**
- * Filter out transactions marked as duplicates
+ * Filter out transactions at specified indices.
+ *
+ * @param transactions - Array of transactions
+ * @param duplicateIndices - Set of indices to exclude
+ * @returns Filtered array without duplicates
  */
 export function filterDuplicates<T>(
   transactions: T[],
