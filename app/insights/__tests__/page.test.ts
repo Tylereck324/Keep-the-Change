@@ -9,31 +9,14 @@ vi.mock('next/dynamic', () => ({
   },
 }))
 
-vi.mock('@/lib/auth', () => ({
-  getSession: vi.fn(),
-}))
-
-vi.mock('@/lib/actions/insights', () => ({
-  getMerchantInsights: vi.fn(),
-  getRecurringCharges: vi.fn(),
-}))
-
-vi.mock('next/navigation', () => ({
-  redirect: vi.fn(),
-}))
-
-vi.mock('next/link', () => ({
-  default: ({ children }: { children: React.ReactNode }) => children,
-}))
-
-describe('insights page dynamic chart', () => {
+describe('merchant chart section dynamic import', () => {
   beforeEach(() => {
     dynamicCalls.length = 0
     vi.resetModules()
   })
 
   it('uses dynamic import for merchant chart with ssr disabled and skeleton height', async () => {
-    await import('@/app/insights/page')
+    await import('@/components/insights/merchant-chart-section')
 
     expect(dynamicCalls.length).toBe(1)
     const call = dynamicCalls[0]
