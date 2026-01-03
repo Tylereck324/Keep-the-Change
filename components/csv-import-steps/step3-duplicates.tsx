@@ -45,12 +45,6 @@ export function Step3Duplicates({
   const handleDecision = (decision: 'skip' | 'import', remember: boolean) => {
     if (!currentDuplicate) return
 
-    // Record this decision
-    setDecisions((prev) => ({
-      ...prev,
-      [currentDuplicate.importIndex]: decision,
-    }))
-
     // If user wants to remember, apply to all remaining duplicates
     if (remember) {
       setRememberChoice(decision)
@@ -62,12 +56,23 @@ export function Step3Duplicates({
         }),
         {}
       )
-      setDecisions((prev) => ({ ...prev, ...bulkDecisions }))
+      const nextDecisions = {
+        ...decisions,
+        [currentDuplicate.importIndex]: decision,
+        ...bulkDecisions,
+      }
+      setDecisions(nextDecisions)
 
-      // Jump to finish
-      handleFinish()
+      // Jump to finish with computed decisions
+      handleFinish(nextDecisions)
       return
     }
+
+    // Record this decision
+    setDecisions((prev) => ({
+      ...prev,
+      [currentDuplicate.importIndex]: decision,
+    }))
 
     // Move to next duplicate or finish
     if (currentIndex < duplicates.length - 1) {
@@ -77,10 +82,11 @@ export function Step3Duplicates({
     }
   }
 
-  const handleFinish = () => {
+  const handleFinish = (decisionsOverride?: Record<number, 'skip' | 'import'>) => {
+    const decisionsToUse = decisionsOverride ?? decisions
     // Get indices to skip
     const skipIndices = new Set(
-      Object.entries(decisions)
+      Object.entries(decisionsToUse)
         .filter(([_, decision]) => decision === 'skip')
         .map(([index]) => parseInt(index))
     )
