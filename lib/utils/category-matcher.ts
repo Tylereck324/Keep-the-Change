@@ -26,7 +26,7 @@ function matchByKeyword(
 
   for (const [categoryId, keywords] of Object.entries(keywordsByCategory)) {
     for (const keywordObj of keywords) {
-      if (normalizedDesc.includes(keywordObj.keyword)) {
+      if (normalizedDesc.includes(keywordObj.keyword.toLowerCase())) {
         return categoryId
       }
     }

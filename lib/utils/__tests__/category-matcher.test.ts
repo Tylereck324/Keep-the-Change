@@ -36,6 +36,17 @@ describe('matchCategory', () => {
       expect(result.confidence).toBe('high')
     })
 
+    it('should match keyword regardless of keyword case', () => {
+      const keywords: Record<string, CategoryKeyword[]> = {
+        'cat-groceries': [createKeyword('cat-groceries', 'Walmart')],
+      }
+
+      const result = matchCategory('walmart market', keywords, [])
+
+      expect(result.categoryId).toBe('cat-groceries')
+      expect(result.matchType).toBe('keyword')
+    })
+
     it('should match keyword as substring', () => {
       const keywords: Record<string, CategoryKeyword[]> = {
         'cat-gas': [createKeyword('cat-gas', 'shell')],
