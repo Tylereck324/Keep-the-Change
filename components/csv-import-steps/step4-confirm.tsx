@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
@@ -34,6 +34,30 @@ export function Step4Confirm({
     failed: number
     errors: Array<{ index: number; message: string }>
   } | null>(null)
+
+  const progressIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const autoCloseTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const mountedRef = useRef(true)
+
+  const clearProgressInterval = () => {
+    if (progressIntervalRef.current) {
+      clearInterval(progressIntervalRef.current)
+      progressIntervalRef.current = null
+    }
+  }
+
+  const clearAutoCloseTimeout = () => {
+    clearTimeout(autoCloseTimeoutRef.current ?? undefined)
+    autoCloseTimeoutRef.current = null
+  }
+
+  useEffect(() => {
+    return () => {
+      mountedRef.current = false
+      clearProgressInterval()
+      clearAutoCloseTimeout()
+    }
+  }, [])
 
   // Calculate summary statistics
   const summary = useMemo(() => {
@@ -82,6 +106,8 @@ export function Step4Confirm({
   const handleImport = async () => {
     setImporting(true)
     setProgress(0)
+    clearProgressInterval()
+    clearAutoCloseTimeout()
 
     try {
       // Convert to import format
@@ -93,14 +119,17 @@ export function Step4Confirm({
       }))
 
       // Simulate progress during import
-      const progressInterval = setInterval(() => {
+      progressIntervalRef.current = setInterval(() => {
+        if (!mountedRef.current) return
         setProgress((prev) => Math.min(prev + 10, 90))
       }, 200)
 
       // Import transactions
       const importResult = await bulkImportTransactions(importData)
 
-      clearInterval(progressInterval)
+      if (!mountedRef.current) return
+
+      clearProgressInterval()
       setProgress(95)
 
       // Learn patterns for manually categorized transactions
@@ -118,6 +147,7 @@ export function Step4Confirm({
           // Ignore individual pattern learning errors
           console.error('Failed to learn pattern:', err)
         }
+        if (!mountedRef.current) return
       }
 
       setProgress(100)
@@ -125,11 +155,14 @@ export function Step4Confirm({
 
       // Auto-close on success after 1 second
       if (importResult.success) {
-        setTimeout(() => {
-          onComplete()
+        autoCloseTimeoutRef.current = setTimeout(() => {
+          if (mountedRef.current) {
+            onComplete()
+          }
         }, 1000)
       }
     } catch (err) {
+      if (!mountedRef.current) return
       setResult({
         success: false,
         imported: 0,
@@ -143,7 +176,10 @@ export function Step4Confirm({
       })
       setProgress(0)
     } finally {
-      setImporting(false)
+      clearProgressInterval()
+      if (mountedRef.current) {
+        setImporting(false)
+      }
     }
   }
 
