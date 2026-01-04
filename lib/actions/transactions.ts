@@ -123,8 +123,12 @@ export async function createTransaction(data: {
       p_household_id: householdId
     })
 
+    if (rpcError) {
+      throw new Error(`Failed to check idempotency key: ${rpcError.message}`)
+    }
+
     // If key exists (isNew === false), we skip insertion (idempotent success)
-    if (!rpcError && isNew === false) {
+    if (isNew === false) {
       return
     }
   }
@@ -158,7 +162,8 @@ export async function updateTransaction(
     description?: string
     date: string
     type?: 'income' | 'expense'
-  }
+  },
+  expectedUpdatedAt: string
 ): Promise<void> {
   const householdId = await getSession()
   if (!householdId) throw new Error('Not authenticated')
@@ -168,9 +173,28 @@ export async function updateTransaction(
     throw new Error('Transaction ID is required')
   }
 
-  const validated = updateTransactionSchema.parse({ ...data, id })
+  const validated = updateTransactionSchema.parse({ ...data, id, expectedUpdatedAt })
 
-  const { error } = await supabaseAdmin
+  const { data: current, error: fetchError } = await supabaseAdmin
+    .from('transactions')
+    .select('id, updated_at')
+    .eq('id', id)
+    .eq('household_id', householdId)
+    .maybeSingle()
+
+  if (fetchError) {
+    throw new Error(`Failed to load transaction: ${fetchError.message}`)
+  }
+
+  if (!current) {
+    throw new Error('Transaction not found')
+  }
+
+  if (current.updated_at !== validated.expectedUpdatedAt) {
+    throw new Error('This transaction was modified by someone else. Please refresh and try again.')
+  }
+
+  const { data: updated, error } = await supabaseAdmin
     .from('transactions')
     .update({
       category_id: validated.categoryId || null,
@@ -182,9 +206,15 @@ export async function updateTransaction(
     })
     .eq('id', id)
     .eq('household_id', householdId)
+    .eq('updated_at', validated.expectedUpdatedAt)
+    .select('id')
 
   if (error) {
     throw new Error(`Failed to update transaction: ${error.message}`)
+  }
+
+  if (!updated || updated.length === 0) {
+    throw new Error('This transaction was modified by someone else. Please refresh and try again.')
   }
 
   revalidatePath('/')
