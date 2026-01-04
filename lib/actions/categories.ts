@@ -91,9 +91,27 @@ export async function updateCategory(id: string, name: string, color: string): P
   revalidatePath('/')
 }
 
-export async function deleteCategory(id: string): Promise<void> {
+export async function deleteCategory(id: string): Promise<{ affectedTransactions: number }> {
   const householdId = await getSession()
   if (!householdId) throw new Error('Not authenticated')
+
+  const { data: category, error: categoryError } = await supabaseAdmin
+    .from('categories')
+    .select('id')
+    .eq('id', id)
+    .eq('household_id', householdId)
+    .maybeSingle()
+
+  if (categoryError) throw new Error(`Failed to fetch category: ${categoryError.message}`)
+  if (!category) throw new Error('Category not found')
+
+  const { count, error: countError } = await supabaseAdmin
+    .from('transactions')
+    .select('id', { count: 'exact', head: true })
+    .eq('household_id', householdId)
+    .eq('category_id', id)
+
+  if (countError) throw new Error(`Failed to count transactions: ${countError.message}`)
 
   const { error } = await supabaseAdmin
     .from('categories')
@@ -104,4 +122,5 @@ export async function deleteCategory(id: string): Promise<void> {
   if (error) throw new Error(`Failed to delete category: ${error.message}`)
 
   revalidatePath('/')
+  return { affectedTransactions: count ?? 0 }
 }
