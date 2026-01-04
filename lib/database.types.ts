@@ -119,6 +119,7 @@ export type Database = {
           id: string
           name: string
           pin_hash: string
+          timezone: string
         }
         Insert: {
           auto_rollover_budget?: boolean
@@ -126,6 +127,7 @@ export type Database = {
           id?: string
           name?: string
           pin_hash: string
+          timezone?: string
         }
         Update: {
           auto_rollover_budget?: boolean
@@ -133,6 +135,7 @@ export type Database = {
           id?: string
           name?: string
           pin_hash?: string
+          timezone?: string
         }
         Relationships: []
       }
@@ -258,6 +261,7 @@ export type Database = {
           amount_cents: number
           category_id: string | null
           created_at: string | null
+          updated_at: string | null
           date: string
           description: string | null
           household_id: string
@@ -269,6 +273,7 @@ export type Database = {
           amount_cents: number
           category_id?: string | null
           created_at?: string | null
+          updated_at?: string | null
           date?: string
           description?: string | null
           household_id: string
@@ -280,6 +285,7 @@ export type Database = {
           amount_cents?: number
           category_id?: string | null
           created_at?: string | null
+          updated_at?: string | null
           date?: string
           description?: string | null
           household_id?: string

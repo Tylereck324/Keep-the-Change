@@ -11,9 +11,11 @@ import { CategoryForm } from './category-form'
 import { getCurrentMonth } from '@/lib/utils/date'
 import { isIncomeTransaction } from '@/lib/utils/transaction-helpers'
 import { formatMoney, dollarsToCents } from '@/lib/utils/money'
+import { getHouseholdTimezone } from '@/lib/actions/settings'
 
 export async function Dashboard() {
-  const currentMonth = getCurrentMonth()
+  const timezone = await getHouseholdTimezone()
+  const currentMonth = getCurrentMonth(timezone)
 
   // Auto-rollover budget from previous month if enabled and needed
   await autoRolloverIfNeeded(currentMonth)

@@ -6,6 +6,7 @@ create table households (
   id uuid primary key default uuid_generate_v4(),
   name text not null default 'My Household',
   pin_hash text not null,
+  timezone text not null default 'UTC',
   created_at timestamp with time zone default now()
 );
 
@@ -26,7 +27,8 @@ create table transactions (
   amount decimal(10,2) not null,
   description text,
   date date not null default current_date,
-  created_at timestamp with time zone default now()
+  created_at timestamp with time zone default now(),
+  updated_at timestamp with time zone default now()
 );
 
 -- Monthly budgets table

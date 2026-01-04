@@ -9,12 +9,14 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import Link from 'next/link'
 import { getCurrentMonth } from '@/lib/utils/date'
+import { getHouseholdTimezone } from '@/lib/actions/settings'
 
 export default async function BudgetPage() {
   const session = await getSession()
   if (!session) redirect('/')
 
-  const currentMonth = getCurrentMonth()
+  const timezone = await getHouseholdTimezone()
+  const currentMonth = getCurrentMonth(timezone)
 
   // Auto-rollover budget from previous month if enabled and needed
   await autoRolloverIfNeeded(currentMonth)

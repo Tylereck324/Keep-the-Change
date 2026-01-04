@@ -8,15 +8,17 @@ import { CategoryBreakdownChart } from '@/components/reports/category-breakdown-
 import { TrendChart } from '@/components/reports/trend-chart'
 import Link from 'next/link'
 import { getCurrentMonth, getLastNMonths } from '@/lib/utils/date'
+import { getHouseholdTimezone } from '@/lib/actions/settings'
 
 export default async function ReportsPage() {
   const session = await getSession()
   if (!session) redirect('/')
 
-  const currentMonth = getCurrentMonth()
-  const currentYear = new Date().getFullYear()
+  const timezone = await getHouseholdTimezone()
+  const currentMonth = getCurrentMonth(timezone)
+  const currentYear = Number(currentMonth.split('-')[0])
   // getLastNMonths returns months in reverse order (most recent first), so we reverse for chronological order
-  const last6Months = getLastNMonths(6).reverse()
+  const last6Months = getLastNMonths(6, timezone).reverse()
 
   const [monthlyReport, trendData, forecast, yearSummary] = await Promise.all([
     getMonthlyReport(currentMonth),

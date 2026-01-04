@@ -30,6 +30,16 @@ describe('Date Utilities', () => {
             vi.setSystemTime(new Date(2024, 0, 31))
             expect(getCurrentMonth()).toBe('2024-01')
         })
+
+        it('returns month based on provided timezone', () => {
+            vi.setSystemTime(new Date('2026-01-01T00:30:00Z'))
+            expect(getCurrentMonth('America/Los_Angeles')).toBe('2025-12')
+        })
+
+        it('falls back to UTC for invalid timezone', () => {
+            vi.setSystemTime(new Date('2026-01-01T00:30:00Z'))
+            expect(getCurrentMonth('Invalid/Zone')).toBe('2026-01')
+        })
     })
 
     describe('getPreviousMonth', () => {

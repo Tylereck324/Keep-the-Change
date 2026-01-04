@@ -5,10 +5,22 @@
 
 /**
  * Gets the current month in YYYY-MM format.
+ * If a timezone is provided, computes the month in that timezone.
  */
-export function getCurrentMonth(): string {
+export function getCurrentMonth(timezone?: string): string {
     const now = new Date()
-    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+
+    if (!timezone || timezone === 'UTC') {
+        return now.toISOString().slice(0, 7)
+    }
+
+    try {
+        const localized = now.toLocaleString('en-US', { timeZone: timezone })
+        const date = new Date(localized)
+        return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
+    } catch {
+        return now.toISOString().slice(0, 7)
+    }
 }
 
 /**
@@ -37,13 +49,15 @@ export function getPreviousMonth(month: string): string {
  * @param n Number of months to return
  * @returns Array of month strings, most recent first
  */
-export function getLastNMonths(n: number): string[] {
-    const now = new Date()
+export function getLastNMonths(n: number, timezone?: string): string[] {
     const months: string[] = []
 
-    for (let i = 0; i < n; i++) {
-        const date = new Date(now.getFullYear(), now.getMonth() - i, 1)
-        months.push(`${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`)
+    let current = getCurrentMonth(timezone)
+    months.push(current)
+
+    for (let i = 1; i < n; i++) {
+        current = getPreviousMonth(current)
+        months.push(current)
     }
 
     return months

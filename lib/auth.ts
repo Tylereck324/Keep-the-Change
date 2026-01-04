@@ -5,6 +5,7 @@ import { supabaseAdmin } from './supabase-server'
 
 const COOKIE_NAME = 'household_session'
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 30 // 30 days
+const SESSION_WARNING_THRESHOLD = 60 * 60 * 24 // 24 hours before expiry
 
 /**
  * Get secret key for JWT signing.
@@ -113,4 +114,56 @@ export async function checkHouseholdExists() {
     .single()
 
   return !!data
+}
+
+/**
+ * Get remaining time until session expiry in seconds.
+ * Returns null if no valid session exists.
+ * Phase 1.1: Session refresh mechanism
+ */
+export async function getSessionTimeRemaining(): Promise<number | null> {
+  const cookieStore = await cookies()
+  const token = cookieStore.get(COOKIE_NAME)?.value
+
+  if (!token) return null
+
+  try {
+    const { payload } = await jwtVerify(token, getSecretKey())
+
+    if (!payload.exp) return null
+
+    const now = Math.floor(Date.now() / 1000)
+    const remaining = payload.exp - now
+
+    return remaining > 0 ? remaining : 0
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Check if session is approaching expiry (< 24 hours remaining).
+ * Phase 1.1: Session refresh mechanism
+ */
+export async function isSessionExpiringSoon(): Promise<boolean> {
+  const remaining = await getSessionTimeRemaining()
+  if (remaining === null) return false
+
+  return remaining < SESSION_WARNING_THRESHOLD
+}
+
+/**
+ * Refresh the current session by creating a new token with extended expiry.
+ * Phase 1.1: Session refresh mechanism
+ */
+export async function refreshSession(): Promise<{ success: boolean; expiresIn?: number; error?: string }> {
+  const householdId = await getSession()
+
+  if (!householdId) {
+    return { success: false, error: 'No active session to refresh' }
+  }
+
+  await createSession(householdId)
+
+  return { success: true, expiresIn: COOKIE_MAX_AGE }
 }

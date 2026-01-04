@@ -33,3 +33,33 @@ export async function setAutoRolloverSetting(enabled: boolean): Promise<void> {
   revalidatePath('/settings')
   revalidatePath('/')
 }
+
+export async function getHouseholdTimezone(): Promise<string> {
+  const householdId = await getSession()
+  if (!householdId) return 'UTC'
+
+  const { data } = await supabaseAdmin
+    .from('households')
+    .select('timezone')
+    .eq('id', householdId)
+    .maybeSingle()
+
+  return data?.timezone ?? 'UTC'
+}
+
+export async function setHouseholdTimezone(timezone: string): Promise<void> {
+  const householdId = await getSession()
+  if (!householdId) throw new Error('Not authenticated')
+
+  const { error } = await supabaseAdmin
+    .from('households')
+    .update({ timezone })
+    .eq('id', householdId)
+
+  if (error) {
+    throw new Error(`Failed to update timezone: ${error.message}`)
+  }
+
+  revalidatePath('/settings')
+  revalidatePath('/')
+}

@@ -3,10 +3,11 @@
 import { revalidatePath } from 'next/cache'
 import { supabaseAdmin } from '@/lib/supabase-server'
 import { getSession } from '@/lib/auth'
-import { getAutoRolloverSetting } from '@/lib/actions/settings'
+import { getAutoRolloverSetting, getHouseholdTimezone } from '@/lib/actions/settings'
 import { MonthlyBudget } from '@/lib/types'
 import { validateMonth } from '@/lib/utils/validators'
 import { dollarsToCents, centsToDollars } from '@/lib/utils/money'
+import { getCurrentMonth } from '@/lib/utils/date'
 import {
   setBudgetSchema,
   copyBudgetSchema,
@@ -166,10 +167,8 @@ export async function getBudgetDataForWarnings(): Promise<{
     return { budgetMap: {}, spentMap: {} }
   }
 
-  // Note: Uses UTC timezone for current month calculation. This may be inaccurate
-  // for users near day boundaries in timezones significantly offset from UTC.
-  // Consider using a user-specific timezone setting for production use.
-  const currentMonth = new Date().toISOString().slice(0, 7) // YYYY-MM
+  const timezone = await getHouseholdTimezone()
+  const currentMonth = getCurrentMonth(timezone)
 
   // Get budgets for current month
   const budgets = await getMonthlyBudgets(currentMonth)

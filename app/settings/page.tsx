@@ -9,6 +9,7 @@ import { AutoRolloverToggle } from '@/components/auto-rollover-toggle'
 import { KeywordManagement } from '@/components/keyword-management'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { TimezoneSelector } from '@/components/timezone-selector'
 import Link from 'next/link'
 
 export default async function SettingsPage() {
@@ -45,7 +46,10 @@ export default async function SettingsPage() {
           <CardTitle>Budget Settings</CardTitle>
         </CardHeader>
         <CardContent>
-          <AutoRolloverToggle />
+          <div className="space-y-6">
+            <AutoRolloverToggle />
+            <TimezoneSelector />
+          </div>
         </CardContent>
       </Card>
 
