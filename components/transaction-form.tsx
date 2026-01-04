@@ -126,8 +126,8 @@ export function TransactionForm({ categories, transaction, trigger, onSuccess, b
     setError('')
 
     const numAmount = parseFloat(amount)
-    if (isNaN(numAmount) || numAmount <= 0) {
-      setError('Please enter a valid amount')
+    if (isNaN(numAmount) || numAmount === 0) {
+      setError('Amount must be non-zero')
       return
     }
 
@@ -141,13 +141,19 @@ export function TransactionForm({ categories, transaction, trigger, onSuccess, b
 
     try {
       if (isEditing) {
+        const expectedUpdatedAt = transaction.updated_at ?? transaction.created_at
+
+        if (!expectedUpdatedAt) {
+          throw new Error('Transaction timestamp missing. Please refresh and try again.')
+        }
+
         await updateTransaction(transaction.id, {
           categoryId: isIncome ? undefined : categoryId,
           amount: numAmount,
           description: description.trim() || undefined,
           date,
           type: transactionType,
-        })
+        }, expectedUpdatedAt)
       } else {
         await createTransaction({
           categoryId: isIncome ? undefined : categoryId,
@@ -262,13 +268,13 @@ export function TransactionForm({ categories, transaction, trigger, onSuccess, b
                 id="amount"
                 type="number"
                 step="0.01"
-                min="0.01"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 placeholder="0.00"
                 autoFocus
               />
             </div>
+            <p className="text-xs text-muted-foreground">Use a negative amount for refunds.</p>
           </div>
 
           {/* Category - only for expenses */}
