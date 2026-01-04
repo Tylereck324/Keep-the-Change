@@ -25,8 +25,8 @@ export const createTransactionSchema = z.object({
     categoryId: uuid.optional(),
     amount: z.number()
         .finite('Amount must be a finite number')
-        .positive('Amount must be positive')
-        .max(100_000_000, 'Amount exceeds maximum allowed value'),
+        .refine((value) => value !== 0, 'Amount must be non-zero')
+        .refine((value) => Math.abs(value) <= 100_000_000, 'Amount exceeds maximum allowed value'),
     description: z.string()
         .max(100, 'Description must be 100 characters or less')
         .optional(),
@@ -50,6 +50,7 @@ export const createTransactionSchema = z.object({
  */
 export const updateTransactionSchema = createTransactionSchema.extend({
     id: uuid,
+    expectedUpdatedAt: z.string().min(1, 'Expected updated timestamp is required'),
 })
 
 /**
