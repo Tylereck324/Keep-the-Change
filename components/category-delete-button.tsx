@@ -27,8 +27,10 @@ export function CategoryDeleteButton({ categoryId, categoryName }: CategoryDelet
     const handleDelete = async () => {
         setDeleting(true)
         try {
-            await deleteCategory(categoryId)
-            toast.success(`Category "${categoryName}" deleted`)
+            const result = await deleteCategory(categoryId)
+            const count = result?.affectedTransactions ?? 0
+            const suffix = count === 1 ? '1 transaction moved' : `${count} transactions moved`
+            toast.success(`Category "${categoryName}" deleted. ${suffix} to Uncategorized.`)
         } catch (err) {
             const message = err instanceof Error ? err.message : 'Failed to delete category'
             toast.error(message)
